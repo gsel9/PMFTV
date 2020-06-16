@@ -33,9 +33,6 @@ class MFTV(MFBase):
         self.S = self.X_train.copy()
         self.Ir = np.eye(self.rank) * (1 + self.lambda2 * self.tau)
 
-        # Initialise the dual variable.
-        self.Y = np.zeros_like(self.V)
-
         self.O_train = np.zeros_like(self.X_train)
         self.O_train[self.X_train.nonzero()] = 1
 
@@ -48,11 +45,14 @@ class MFTV(MFBase):
 
     def _update_V(self):
         # NOTE: If self.n_iter_ > 0: uses solutions from previous run in initialisation.
+        # Re-initialising dual variable with zeros gives best performance. 
 
-        # Pre-compute matrix for efficiency.
         A = np.linalg.inv(self.tau * self.U.T @ self.U + self.Ir)
 
+        # Dual and auxillary variables.
+        self.Y = np.zeros_like(self.V)
         V_bar = self.V
+
         for i in range(self.num_iter):
 
             # Solve for dual variable.
