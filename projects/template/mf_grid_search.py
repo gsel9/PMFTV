@@ -78,11 +78,11 @@ def set_exp_config(hparams, counter, path_to_results):
         path_data_file="/Users/sela/Desktop/tsd_code/data/screening_filtered/train/X_train.npy",
         path_to_results=path_to_results,
         rank=int(hparams["rank"]),
-        num_train_samples=6000,
+        num_train_samples=2500,
         exp_id="run" + f"_param_combo{counter}", 
         save_only_configs=False,
         num_epochs=500,
-        n_kfold_splits=2,
+        n_kfold_splits=0,
         time_lag=4,
         epochs_per_display=1100,
         epochs_per_val=1100,
@@ -90,9 +90,8 @@ def set_exp_config(hparams, counter, path_to_results):
         monitor_loss=True,
         domain=[1, 4],
         early_stopping=False,
-        #shuffle=False,
         val_size=0.2,
-        #patience=1
+        patience=150
     )
 
     return exp_config
@@ -100,41 +99,25 @@ def set_exp_config(hparams, counter, path_to_results):
 
 def run_grid_search():
 
-    counter_offset = 0
+    counter_offset = 2
 
     model_type = "MFLars"
-    path_to_results = "/Users/sela/Desktop/tsd_code/results/mf_lars/greedy_opt"
+    experiment = "max_iter_rank50_opt_params"
+    path_to_results = "/Users/sela/Desktop/tsd_code/results/mf_lars"
 
     param_config = {
-        "lambda2": [0.1, 1],
-        "lambda3": [0.01, 0.1, 1],
+        "lambda2": [0.1],
+        "lambda3": [100],
         "init_basis": ["hmm"],
-        "rank": [50],
-        "max_iter": [24],
+        "rank": [20],
+        "max_iter": [8, 48],
         "n_time_points": [321]
     }
-
-        """
-    counter_offset = 28
-
-    model_type = "MFTV"
-    path_to_results = "/Users/sela/Desktop/tsd_code/results/mf_tv/greedy_opt"
-    param_config = {
-        "lambda1": [1],
-        "lambda2": [0.001, 5],
-        "lambda3": [8],
-        "init_basis": ["hmm"],
-        "rank": [24],
-        "num_iter": [70], 
-        "gamma": [0.5], 
-        "n_time_points": [321]
-    }
-    """
 
     param_grid = ParameterGrid({**param_config})
-    Parallel(n_jobs=3)(
+    Parallel(n_jobs=1)(
         delayed(matrix_completion)(
-            set_exp_config(param_combo, counter + counter_offset, path_to_results), 
+            set_exp_config(param_combo, counter + counter_offset, f"{path_to_results}/{experiment}"), 
             set_model_config(param_combo, model_type=model_type)
         ) 
         for counter, param_combo in enumerate(param_grid)

@@ -10,7 +10,7 @@ class DatasetBase(ABC):
         self.X = np.array(data)
 
 
-class TrainDataset(DatasetBase):
+class ReconstructionDataset(DatasetBase):
 
     def __init__(self, data, ground_truth=None):
     
@@ -18,7 +18,7 @@ class TrainDataset(DatasetBase):
         self.ground_truth = np.array(ground_truth)
 
     @property
-    def X_train(self):
+    def X_rec(self):
         return self.X
 
     @property
@@ -79,11 +79,11 @@ class KFoldDataset(DatasetBase):
         self.time_lag = time_lag
         self.n_splits = n_splits
 
-        self.test_data = TrainTestDataset(data=data, time_lag=self.time_lag)
-        self.train_data = TrainDataset(data=data[self.test_data.valid_rows])
+        self.train_test_data = TrainTestDataset(data=data, time_lag=self.time_lag)
+        self.rec_data = ReconstructionDataset(data=data[self.train_test_data.valid_rows])
 
         kfolds = sklearn.model_selection.KFold(n_splits, shuffle=False)
-        self.idx_per_fold = [idx for idx in kfolds.split(self.train_data.X)]
+        self.idx_per_fold = [idx for idx in kfolds.split(self.train_test_data.X)]
 
         # Instantiate with 1st fold
         self.__i_fold = 0
@@ -94,20 +94,20 @@ class KFoldDataset(DatasetBase):
         return self.__idc_train
 
     @property
-    def X_train(self):
-        return self.train_data.X[self.__idc_train]
+    def X_rec(self):
+        return self.rec_data.X_rec[self.__idc_train]
 
     @property
-    def X_test(self):
-        return self.test_data.X[self.__idc_pred]
+    def X_train(self):
+        return self.train_test_data.X_train[self.__idc_pred]
 
     @property
     def y_true(self):
-        return self.test_data.y_true[self.__idc_pred]
+        return self.train_test_data.y_true[self.__idc_pred]
 
     @property
     def time_of_prediction(self):
-        return self.test_data.time_of_prediction[self.__idc_pred]
+        return self.train_test_data.time_of_prediction[self.__idc_pred]
 
     @property
     def i_fold(self):

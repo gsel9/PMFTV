@@ -24,7 +24,8 @@ def set_model_config(hparams, model_type):
             lambda3=hparams["lambda3"],
             max_iter=hparams["max_iter"],
             init_basis=hparams["init_basis"],
-            J=np.zeros((hparams["n_time_points"], hparams["rank"])),
+            J=np.ones((hparams["n_time_points"], hparams["rank"])),
+            #np.zeros((hparams["n_time_points"], hparams["rank"])),
             K=laplacian_kernel_matrix(hparams["n_time_points"]),
             R=finite_difference_matrix(hparams["n_time_points"])
         )
@@ -50,39 +51,43 @@ def reconstruct_profiles():
 
     # MFConv; MFLars; MFTV
     model_type = "MFTV"
-    exp_id = "init1"
-    experiment = "testing"
     base_path = "/Users/sela/Desktop/tsd_code/results/mf_tv"
+    experiment = "testing"
+    exp_id = "init4"
 
     param_config = {
+        "lambda0": 1.0,
         "lambda1": 1,
         "lambda2": 0.01,
         "lambda3": 8,
-        "init_basis": "hmm",
-        "rank": 24,
         "num_iter": 70,
+        "init_basis": "hmm",
         "gamma": 0.5,
+        "rank": 20,
         "n_time_points": 321
     }
 
+    # TODO: 
+    # * Always zero init matrices TV
     exp_config = ExperimentConfig(
         path_data_file="/Users/sela/Desktop/tsd_code/data/screening_filtered/train/X_train.npy",
         rank=param_config["rank"],
         exp_id=exp_id, 
         path_to_results=f"{base_path}/{experiment}",
         save_only_configs=False,
-        num_epochs=2000,
+        num_train_samples=4000,
+        num_epochs=500,
         time_lag=4,
-        #num_train_samples=50,
         epochs_per_display=100,
-        #epochs_per_val=50,
+        epochs_per_val=20,
         seed=42,
         domain=[1, 4],
-        #early_stopping=False,
-        #shuffle=False,
-        #val_size=0.2,
-        #patience=2
+        early_stopping=True,
+        val_size=0.2,
+        patience=150
     )
+
+    # TODO: Use input() to verify exp params.
 
     matrix_completion(exp_config, set_model_config(param_config, model_type=model_type))
 

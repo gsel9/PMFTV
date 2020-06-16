@@ -15,6 +15,9 @@ def train_val_split(X, exp_config):
     print(f"Splitted into {X[train_idx].shape} training and "
           f"{X[val_idx].shape} validation sets")
 
+    exp_config.update_value("num_train_samples", len(train_idx))
+    exp_config.update_value("num_val_samples", len(val_idx))
+
     val_set = TrainTestDataset(X[val_idx], time_lag=exp_config.time_lag)
 
     return X[train_idx], val_set

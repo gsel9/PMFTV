@@ -34,11 +34,16 @@ class ExperimentConfig(BaseConfig):
 			"domain": None,
 			"early_stopping": None,
 			"shuffle": False,
-			"val_size": 0.2,
+			"val_size": 0,
 			"patience": 0,
-			"monitor_loss": True
+			"monitor_loss": True,
+			"tol": 1e-5
 		}
 		return default.copy()
+
+	def update_value(self, key, value):
+
+		self.config[key] = value
 
 	def update_config(self, updates):
 
