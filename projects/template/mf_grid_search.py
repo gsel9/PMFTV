@@ -25,51 +25,11 @@ import numpy as np
 from joblib import Parallel, delayed
 from sklearn.model_selection import ParameterGrid
 
-from simulation.configs import (
-    MFLarsConfig, 
-    MFTVConfig,
-    ExperimentConfig
-)
+from simulation.configs import ExperimentConfig, set_model_config
 from simulation.mf_experiments import (
     kfold_matrix_completion, 
     matrix_completion
 )
-from simulation.utils.special_matrices import (
-    laplacian_kernel_matrix,
-    finite_difference_matrix
-)
-
-
-def set_model_config(hparams, model_type):
-
-    if model_type == "MFLars":
-        
-        return MFLarsConfig(
-            lambda2=hparams["lambda2"],
-            lambda3=hparams["lambda3"],
-            max_iter=hparams["max_iter"],
-            init_basis=hparams["init_basis"],
-            J=np.ones((hparams["n_time_points"], hparams["rank"])),
-            #np.zeros((hparams["n_time_points"], hparams["rank"])),
-            K=laplacian_kernel_matrix(hparams["n_time_points"]),
-            R=finite_difference_matrix(hparams["n_time_points"])
-        )
-
-    if model_type == "MFTV":
-
-        return MFTVConfig(
-            lambda1=hparams["lambda1"],
-            lambda2=hparams["lambda2"],
-            lambda3=hparams["lambda3"],
-            gamma=hparams["gamma"],
-            num_iter=hparams["num_iter"],
-            init_basis=hparams["init_basis"],
-            J=np.ones((hparams["n_time_points"], hparams["rank"])),
-            #np.zeros((hparams["n_time_points"], hparams["rank"])),
-            R=finite_difference_matrix(hparams["n_time_points"])
-        )
-
-    raise ValueError(f"Invalid model type: {model_type}")
 
 
 def set_exp_config(hparams, counter, path_to_results):

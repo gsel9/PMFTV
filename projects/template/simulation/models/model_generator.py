@@ -3,10 +3,17 @@ import warnings
 import numpy as np
 
 from .gdl import MGCNN
-from .matrix_factorisation import MFConv, MFLars, MFTV
+from .matrix_factorisation import (
+    MFConv, MFLars, MFTV, WeightedMFConv, WeightedMFTV
+)
 
 
 def get_basis(init_basis, rank, X):
+
+    # NOTE: The initial approach. 
+    if init_basis == "mean":
+
+        return np.ones((X.shape[1], rank)) * np.mean(X[X.nonzero()])
 
     if init_basis == "svd":
 
@@ -53,6 +60,29 @@ def get_gdl_model(X, exp_config, model_config, L_row, L_col):
         ord_row_conv=model_config.degree_row_poly, 
         ord_col_conv=model_config.degree_col_poly,
         diffusion_steps=model_config.diffusion_steps
+    )
+
+    return model
+
+
+def get_weighted_mf_conv_model(X, exp_config, model_config):
+
+    print("Instantiating Weighted Convolutional MF model:")
+    print(f"* lambda1: {model_config.lambda1}")
+    print(f"* lambda2: {model_config.lambda2}")
+    print(f"* lambda3: {model_config.lambda3}")
+    print(f"* rank: {exp_config.rank}")
+
+    model = WeightedMFConv(
+        X_train=X, 
+        V_init=get_basis(model_config.init_basis, rank=exp_config.rank, X=X), 
+        R=model_config.R, 
+        W=model_config.W,
+        K=model_config.K,
+        lambda1=model_config.lambda1, 
+        lambda2=model_config.lambda2, 
+        lambda3=model_config.lambda3,
+        rank=exp_config.rank
     )
 
     return model
@@ -110,6 +140,32 @@ def get_mf_lars_model(X, exp_config, model_config):
     return model
 
 
+def get_weighted_mf_tv_model(X, exp_config, model_config):
+
+    print("Instantiating Weighted TV MF model:")
+    print(f"* lambda1: {model_config.lambda1}")
+    print(f"* lambda2: {model_config.lambda2}")
+    print(f"* lambda3: {model_config.lambda3}")
+    print(f"* gamma: {model_config.gamma}")
+    print(f"* num_iter: {model_config.num_iter}")
+    print(f"* rank: {exp_config.rank}")
+
+    model = WeightedMFTV(
+        X_train=X, 
+        V_init=get_basis(model_config.init_basis, rank=exp_config.rank, X=X), 
+        R=model_config.R, 
+        W=model_config.W,
+        gamma=model_config.gamma,
+        lambda1=model_config.lambda1, 
+        lambda2=model_config.lambda2, 
+        lambda3=model_config.lambda3,
+        num_iter=model_config.num_iter,
+        rank=exp_config.rank
+    )
+
+    return model
+
+
 def get_mf_tv_model(X, exp_config, model_config):
 
     print("Instantiating TV MF model:")
@@ -124,7 +180,6 @@ def get_mf_tv_model(X, exp_config, model_config):
         X_train=X, 
         V_init=get_basis(model_config.init_basis, rank=exp_config.rank, X=X), 
         R=model_config.R, 
-        J=model_config.J,
         gamma=model_config.gamma,
         lambda1=model_config.lambda1, 
         lambda2=model_config.lambda2, 
@@ -141,11 +196,17 @@ def init_model(X, exp_config, model_config, L_row=None, L_col=None):
     if model_config.model_type == "MFConv":
         return get_mf_conv_model(X=X, exp_config=exp_config, model_config=model_config)
 
+    if model_config.model_type == "WMFConv":
+        return get_weighted_mf_conv_model(X=X, exp_config=exp_config, model_config=model_config)
+
     if model_config.model_type == "MFLars":
         return get_mf_lars_model(X=X, exp_config=exp_config, model_config=model_config)
 
     if model_config.model_type == "MFTV":
         return get_mf_tv_model(X=X, exp_config=exp_config, model_config=model_config)
+
+    if model_config.model_type == "WMFTV":
+        return get_weighted_mf_tv_model(X=X, exp_config=exp_config, model_config=model_config)
 
     if model_config.model_type == "GDL":
         return get_gel_model(X=X, exp_config=exp_config, model_config=model_config, 

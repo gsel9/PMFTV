@@ -1,5 +1,7 @@
 import numpy as np
 
+from scipy.linalg import solve_sylvester
+
 from .base import MFBase
 
 
@@ -79,7 +81,7 @@ class MFConv(MFBase):
     """
 
     def __init__(self, X_train, V_init, R=None, J=None, K=None, rank=5, name="MFConv",
-                 lambda0=1.0, lambda1=1.0, lambda2=1.0, lambda3=0.0):
+                 lambda0=1.0, lambda1=1.0, lambda2=1.0, lambda3=0.0, init_matrices=True):
 
         self.X_train = X_train
 
@@ -93,11 +95,12 @@ class MFConv(MFBase):
         self.lambda2 = lambda2
         self.lambda3 = lambda3
 
-        self.init_matrices(K, J, R)
+        if init_matrices:
+            self._init_matrices(K, J, R)
 
         self.n_iter_ = 0
 
-    def init_matrices(self, K, J, R):
+    def _init_matrices(self, K, J, R):
 
         self.S = self.X_train.copy()
 
@@ -106,8 +109,8 @@ class MFConv(MFBase):
 
         self.T = int(self.X_train.shape[1])
 
-        self.K = np.identity(self.T) if K is None else K
         self.J = np.zeros((self.T, self.r)) if J is None else J
+        self.K = np.eye(self.T) if K is None else K
         self.R = np.eye(self.T) if R is None else R
 
         self.nonzero_rows, self.nonzero_cols = np.nonzero(self.X_train)
@@ -119,11 +122,8 @@ class MFConv(MFBase):
     def _update_V(self):
 
         L1, Q1 = np.linalg.eigh(self.U.T @ self.U + (self.lambda2 / self.lambda0) * np.identity(self.r))
-
-        # For efficiency purposes, these need to be evaluated in order
-        hatV = ((self.Q2.T @ (self.S.T @ self.U + (self.lambda2 / self.lambda0) * self.J)) @ Q1 / np.add.outer(self.L2, L1))
-        V = self.Q2 @ (hatV @ Q1.T)
-
+        V_hat = (self.Q2.T @ (self.S.T @ self.U + (self.lambda2 / self.lambda0) * self.J)) @ Q1 / np.add.outer(self.L2, L1)
+        V = self.Q2 @ (V_hat @ Q1.T)
         self.V = V
 
     def _update_U(self):
@@ -174,3 +174,134 @@ class MFConv(MFBase):
         self._update_S()
 
         self.n_iter_ += 1
+
+
+class WeightedMFConv(MFConv):
+    """Weight the discrepancy S - UV^T to focus more attention on reconstructing 
+    specific samples.
+    """
+
+    def __init__(self, X_train, V_init, R=None, W=None, K=None, rank=None,
+                 lambda0=1.0, lambda1=None, lambda2=1.0, lambda3=0.0, name="WMFConv", verbose=0):
+
+        MFConv.__init__(self, name=name, X_train=X_train, V_init=V_init, rank=rank, 
+                        lambda0=lambda0, lambda1=lambda1, lambda2=lambda2, lambda3=lambda3,
+                        init_matrices=False)
+
+        # TEMP: Weight samples with high-risk/cancer 2x higher than other samples.
+        #self.W = np.diag(np.any(X_train > 2, axis=1) + 1)
+        self.W = np.diag(np.max(X_train, axis=1))
+        #self.W = self.W / np.linalg.norm(self.W)
+
+        self._init_matrices(R, K)
+
+    def _init_matrices(self, R, K):
+
+        self.N, self.T = np.shape(self.X_train)
+        self.nonzero_rows, self.nonzero_cols = np.nonzero(self.X_train)
+
+        self.S = self.X_train.copy()
+
+        self.O_train = np.zeros_like(self.X_train)
+        self.O_train[self.X_train.nonzero()] = 1
+
+        self.R = np.eye(self.T) if R is None else R
+        self.K = np.eye(self.T) if K is None else K
+
+        self.RTCTCR = self.lambda2 * np.eye(self.T) + self.lambda3 * (self.K @ self.R).T @ (self.K @ self.R)
+        self.L1_V, self.Q1_V = np.linalg.eigh(self.RTCTCR)
+
+        self.W2 = self.W ** 2
+        self.L1_U, self.Q1_U = np.linalg.eigh(self.lambda1 * np.linalg.inv(self.W2))
+
+    def _update_V(self):
+
+        L2_V, Q2_V = np.linalg.eigh(self.U.T @ self.W2 @ self.U)
+        V_hat = (Q2_V.T @ (self.U.T @ self.W2 @ self.S)) @ self.Q1_V / np.add.outer(L2_V, self.L1_V)
+        self.V = np.transpose(Q2_V @ (V_hat @ self.Q1_V.T))
+
+    def _update_U(self):
+
+        L2_U, Q2_U = np.linalg.eigh(self.V.T @ self.V)
+        U_hat = (self.Q1_U.T @ (self.S @ self.V)) @ Q2_U / np.add.outer(self.L1_U, L2_U)
+        self.U = self.Q1_U @ (U_hat @ Q2_U)
+
+    def loss(self):
+
+        # Updates to S occurs only at validation scores so must compare against U, V.
+        frob_tensor = self.W @ (self.O_train * (self.X_train - self.U @ self.V.T))
+        loss_frob = np.square(np.linalg.norm(frob_tensor)) / np.sum(self.O_train)
+
+        loss_reg1 = self.lambda1 * np.square(np.linalg.norm(self.U))
+        loss_reg2 = self.lambda2 *  np.square(np.linalg.norm(self.V))
+        loss_reg3 = self.lambda3 *  np.square(np.linalg.norm(self.R @ self.V))
+
+        return loss_frob + loss_reg1 + loss_reg2 + loss_reg3
+
+
+# ERROR: Kronecker product matrices wont fit into computer RAM.
+# class WeightedMFConv(MFConv):
+
+#     def __init__(self, X_train, V_init, R=None, W=None, rank=None,
+#                  lambda0=1.0, lambda1=None, lambda2=1.0, lambda3=0.0, name="WMFConv", verbose=0):
+
+#         MFConv.__init__(self, name=name, X_train=X_train, V_init=V_init, rank=rank, 
+#                         lambda0=lambda0, lambda1=lambda1, lambda2=lambda2, lambda3=lambda3,
+#                         init_matrices=False)
+
+#         # TEMP:
+#         self.W = X_train #W
+
+#         self._init_matrices(R)
+
+#     def _init_matrices(self, R):
+
+#         self.N, self.T = np.shape(self.X_train)
+
+#         self.S = self.X_train.copy()
+#         self.U = np.zeros((self.N, self.r))
+
+#         self.O_train = np.zeros_like(self.X_train)
+#         self.O_train[self.X_train.nonzero()] = 1
+
+#         self.R = np.eye(self.T) if R is None else R
+
+#         self.nonzero_rows, self.nonzero_cols = np.nonzero(self.X_train)
+
+#         # Static variables.
+#         self.Ip = np.eye(self.T)
+#         self.Ir = np.eye(self.r)
+
+#         self.Irp = np.kron(self.Ir, self.Ip) 
+#         self.IrRTR = np.kron(self.Ir, self.R.T @ self.R)
+
+#         self.Dw = np.diag((self.W).flatten(order="F"))
+
+#     def _update_V(self):
+#         # see https://math.stackexchange.com/questions/3548885/sylvesters-equation-with-hadamard-product
+
+#         H = np.kron(self.U.T, self.Ip) @ self.Dw @ np.kron(self.U, self.Ip) + self.Irp + self.IrRTR
+#         C = (W.T ** 2 * self.S.T) @ self.U
+
+#         self.V = np.linalg.solve(a=H, b=C.flatten(order='F')).reshape((self.T, self.r), order='F')
+
+#     def _update_U(self):
+#         # NOTE: Optimality criterion is decoupled over the rows of U such that the solution can 
+#         # be computed row-wise.
+        
+#         for i in range(self.N):
+
+#             A = np.linalg.inv(self.V.T @ np.diag(self.W[i] ** 2) @ self.V + self.lambda1 * self.Ir)
+#             self.U[i] = self.V.T @ np.diag(self.W[i] ** 2) @ self.S[i] @ A
+
+#     def loss(self):
+
+#         # Updates to S occurs only at validation scores so must compare against U, V.
+#         frob_tensor = self.W * self.O_train * (self.X_train - self.U @ self.V.T)
+#         loss_frob = np.square(np.linalg.norm(frob_tensor)) / np.sum(self.O_train)
+
+#         loss_reg1 = self.lambda1 * np.square(np.linalg.norm(self.U))
+#         loss_reg2 = self.lambda2 *  np.square(np.linalg.norm(self.V))
+#         loss_reg3 = self.lambda3 *  np.square(np.linalg.norm(self.R @ self.V))
+
+#         return loss_frob + loss_reg1 + loss_reg2 + loss_reg3
