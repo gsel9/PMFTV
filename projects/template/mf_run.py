@@ -9,18 +9,16 @@ from simulation.models.inference.map import MAP
 def reconstruct_profiles():
 
     # MFConv; MFLars; MFTV; WMFConv: WMFTV
-    model_type = "WMFTV"
+    model_type = "WMFConv"
     base_path = "/Users/sela/Desktop/tsd_code/results"
-    experiment = "wmf_tv/testing"
-    exp_id = "init0"
+    experiment = "wmf_conv/testing"
+    exp_id = "init9"
 
     param_config = {
-        "lambda1": 1,
-        "lambda2": 0.01,
-        "lambda3": 8,
-        "num_iter": 70,
+        "lambda1": 0.5,
+        "lambda2": 0.001,
+        "lambda3": 300,
         "init_basis": "hmm",
-        "gamma": 0.5,
         "rank": 20, 
         "n_time_points": 321
     }

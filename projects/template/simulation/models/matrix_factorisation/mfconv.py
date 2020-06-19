@@ -191,7 +191,9 @@ class WeightedMFConv(MFConv):
         # TEMP: Weight samples with high-risk/cancer 2x higher than other samples.
         #self.W = np.diag(np.any(X_train > 2, axis=1) + 1)
         self.W = np.diag(np.max(X_train, axis=1))
-        #self.W = self.W / np.linalg.norm(self.W)
+        self.W[self.W == 2] = 0.4 #0.4 / 0.5
+        self.W[self.W == 3] = 0.6 #0.6 / 1
+        self.W[self.W == 4] = 1 #1 / 33
 
         self._init_matrices(R, K)
 
