@@ -95,6 +95,8 @@ class MAP:
 
         logL = np.ones((N_2, N_1))
 
+        # Logarithm of (2.14) in project report.
+        # Sum over difference between each sample x in X and all samples in M (sum(x - M)).
         for i in range(N_2):
             row_nonzero_cols = X[i] != 0
             eta_i = (X[i, row_nonzero_cols])[None, :] - self.M_train[:, row_nonzero_cols]
@@ -132,13 +134,16 @@ class MAP:
 
         X, t = X, t
 
+        # Compute p(y \mid M_hat)
         logL = self._loglikelihood(X)
 
         proba_z = np.empty((X.shape[0], self.domain_z.shape[0]))
+        # Compute (2.22) in project report.
         for i in range(X.shape[0]):
+            # Latter term is p(s_t \mid m_t).
             proba_z[i] = np.exp(logL[i]) @ np.exp(-self.theta * (self.M_train[:, t[i], None] - self.domain_z)**2)
 
-        # Normalize.
+        # Scale to [0, 1] (C in (2.22)).
         proba_z_normalized = proba_z / (np.sum(proba_z, axis=1))[:, None]
 
         # Store probabilities

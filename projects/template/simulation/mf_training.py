@@ -6,11 +6,10 @@ import time
 import numpy as np
 
 from tqdm import tqdm
+from sklearn.metrics import matthews_corrcoef
 
 from .models.inference.map import MAP
 from .models.model_generator import init_model
-
-from .utils.metrics import model_performance
 
 
 def train_mf_model(exp_config, run_config, model_config, X_train, val_set=None):
@@ -41,7 +40,7 @@ def train_mf_model(exp_config, run_config, model_config, X_train, val_set=None):
     print(f"-- Training finished in {duration} --")
 
     if val_set is not None:
-        _ = validation_performance(run_config, val_set)
+        run_config.append_value("mcc", validation_performance(run_config, val_set, optimise="mcc"))
 
     return model
 
@@ -56,6 +55,8 @@ def train_mf_model_early_stopping(exp_config, run_config, model_config, X_train,
 
     prev_score = -1
     prev_loss = np.inf
+
+    chances_cnt = exp_config.chances_to_improve
 
     start_time = time.time()
     for epoch in tqdm(range(exp_config.num_epochs)):
@@ -79,18 +80,25 @@ def train_mf_model_early_stopping(exp_config, run_config, model_config, X_train,
 
             score_value = validation_performance(run_config, val_set, optimise="mcc")
             if score_value < prev_score:
-                print("!!! EARLY STOPPING !!!: Score decreasing"
-                      f" from {prev_score} to {score_value}")
-                break
+                if chances_cnt <= 0:
+                    print(f"!!! EARLY STOPPING !!!: Score decreasing from {prev_score} to {score_value}")
+                    break
+                else:
+                    print(f"!!! Score decreasing from {prev_score} to {score_value} !!!:\nChances left: {chances_cnt}")
+                    chances_cnt -= 1
 
             if prev_loss < loss_value:
-                print("!!! EARLY STOPPING !!!: Loss increasing"
-                      f" from {prev_loss} to {loss_value}")
-                break
+                if chances_cnt <= 0:
+                    print(f"!!! EARLY STOPPING !!!: Loss increasing from {prev_loss} to {loss_value}")
+                    break
+                else:
+                    print(f"!!! Loss increasing from {prev_loss} to {loss_value} !!!:\nChances left: {chances_cnt}")
+                    chances_cnt -= 1
 
             run_config.U = model.U
             run_config.V = model.V
             run_config.M_hat = model.U @ model.V.T
+            run_config.append_value("mcc", score_value)
 
             if abs(prev_loss - loss_value) < exp_config.tol:
                 print("!!! EARLY STOPPING !!!: Converged with loss update"
@@ -115,10 +123,5 @@ def validation_performance(run_config, val_set, optimise="mcc"):
     estimator = MAP(M_train=run_config.M_hat, theta=2.5)
     y_pred = estimator.predict(val_set.X_train, val_set.time_of_prediction)
 
-    print("Performance scores:")
-    scores = model_performance(val_set.y_true, y_pred, run_config)
-    print("MCC: {}\nMCC binary: {}\n Sensitivity: {}".format(
-        scores["mcc"], scores["mcc_binary"], scores["sensitivity"])
-    )
-
-    return scores[optimise]
+    if optimise == "mcc":
+        return matthews_corrcoef(val_set.y_true, y_pred)

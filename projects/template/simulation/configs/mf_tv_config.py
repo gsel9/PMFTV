@@ -5,7 +5,7 @@ from .base_config import BaseConfig
 
 class MFTVConfig(BaseConfig):
 
-	def __init__(self, R=None, **kwargs):
+	def __init__(self, R=None, J=None, **kwargs):
 
 		super().__init__()
 		
@@ -17,6 +17,7 @@ class MFTVConfig(BaseConfig):
 			setattr(self, prop, value)
 
 		self.R = R
+		self.J = J
 
 		self.model_type = "MFTV"
 
@@ -40,7 +41,7 @@ class MFTVConfig(BaseConfig):
 
 class WeightedMFTVConfig(BaseConfig):
 
-	def __init__(self, R=None, W=None, **kwargs):
+	def __init__(self, R=None, J=None, **kwargs):
 
 		super().__init__()
 		
@@ -52,7 +53,7 @@ class WeightedMFTVConfig(BaseConfig):
 			setattr(self, prop, value)
 
 		self.R = R
-		self.W = W
+		self.J = J
 
 		self.model_type = "WMFTV"
 

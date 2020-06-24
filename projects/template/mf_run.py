@@ -9,25 +9,28 @@ from simulation.models.inference.map import MAP
 def reconstruct_profiles():
 
     # MFConv; MFLars; MFTV; WMFConv: WMFTV
-    model_type = "WMFConv"
+    model_type = "WMFTV"
     base_path = "/Users/sela/Desktop/tsd_code/results"
-    experiment = "wmf_conv/testing"
-    exp_id = "init9"
+    experiment = "wmf_tv/testing"
+    exp_id = "" #opt_params_weighted  
 
     param_config = {
-        "lambda1": 0.5,
-        "lambda2": 0.001,
-        "lambda3": 300,
+        "lambda0": 1.0,
+        "lambda1": 20,
+        "lambda2": 0.01,
+        "lambda3": 10,
+        "num_iter": 70, 
         "init_basis": "hmm",
-        "rank": 20, 
-        "n_time_points": 321
+        "rank": 30, 
+        "n_time_points": 321,
+        "gamma": 0.5
     }
 
     # TODO: 
     # * new filtered screening data
     # * Use input() to verify exp params + implement `set_exp_config`.
     # * Optimise `theta` as hyperparameter for prediction model.
-
+ 
     exp_config = ExperimentConfig(
         path_data_file="/Users/sela/Desktop/tsd_code/data/screening_filtered/train/X_train.npy",
         #path_data_file=f"/Users/sela/Desktop/recsys_paper/data/dgd/{exp_id}/train/X_train.npy",
@@ -35,16 +38,19 @@ def reconstruct_profiles():
         exp_id=exp_id,
         path_to_results=f"{base_path}/{experiment}",
         save_only_configs=False,
-        #num_train_samples=5, #1000,
-        num_epochs=1000,
+        #num_train_samples=2,
+        num_epochs=1000,#780,
+        n_kfold_splits=0,
         time_lag=4,
-        epochs_per_display=100,
+        epochs_per_display=1100,
         epochs_per_val=20,
         seed=42,
+        monitor_loss=True,
         domain=[1, 4],
-        #early_stopping=False,
+        early_stopping=False,
         #val_size=0.2,
-        #patience=150
+        patience=500,
+        chances_to_improve=2
     )
 
     matrix_completion(exp_config, set_model_config(param_config, model_type=model_type))
@@ -58,7 +64,7 @@ def reconstruct_profiles():
 
     np.save(f"{base_path}/{experiment}/{exp_id}_y_true.npy", test_data.y_true)
     np.save(f"{base_path}/{experiment}/{exp_id}_y_pred.npy", y_pred)
-
+    
 
 if __name__ == '__main__':
     reconstruct_profiles()

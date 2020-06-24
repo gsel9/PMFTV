@@ -49,6 +49,7 @@ def matrix_completion(exp_config, model_config):
 
     run_config = RunConfig()
 
+    # TODO: check if exp_config.num_val_samples > 0 and return val_set (defaults to None).
     _, X_rec = load_data_from_file(exp_config, run_config=run_config)
 
     val_set = None
@@ -60,11 +61,14 @@ def matrix_completion(exp_config, model_config):
         if val_set is None:
             raise ValueError("Should specify size validation set for early stopping.")
 
+        if exp_config.patience > exp_config.num_epochs:
+            raise ValueError("`patience` > num_epochs")
+
         model = train_mf_model_early_stopping(exp_config=exp_config, 
                                               run_config=run_config, 
                                               model_config=model_config, 
                                               X_train=X_rec, val_set=val_set)
-    else:     
+    else:
         model = train_mf_model(exp_config, run_config, model_config, X_rec,
                                val_set=val_set)
 

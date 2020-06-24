@@ -40,7 +40,7 @@ class MFConvConfig(BaseConfig):
 
 class WeightedMFConvConfig(BaseConfig):
 
-	def __init__(self, R=None, W=None, K=None, **kwargs):
+	def __init__(self, R=None, K=None, **kwargs):
 
 		super().__init__()
 		
@@ -52,7 +52,6 @@ class WeightedMFConvConfig(BaseConfig):
 			setattr(self, prop, value)
 
 		self.R = R
-		self.W = W
 		self.K = K
 
 		self.model_type = "WMFConv"

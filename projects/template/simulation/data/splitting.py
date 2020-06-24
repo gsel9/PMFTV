@@ -33,3 +33,10 @@ def sample_subset(X, num_subset_samples, seed, return_index=False):
     	return idx, X[idx]
 
     return X[idx]
+
+
+def sample_validation_set(X, exp_config):
+
+    X_val = sample_subset(X, exp_config.num_subset_samples, exp_config.seed)
+
+    val_set = TrainTestDataset(X_val, time_lag=exp_config.time_lag)

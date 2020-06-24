@@ -32,13 +32,36 @@ def get_basis(init_basis, rank, X):
 
         return np.transpose(data[idx])
 
-    if init_basis == "smooth_hmm":
+    if init_basis == "smooth-hmm":
 
         np.random.seed(42)
         data = np.load("/Users/sela/Desktop/tsd_code/data/hmm/base_set_300K.npy")
         idx = np.random.choice(range(data.shape[0]), size=rank, replace=False)
 
         return np.transpose(data[idx])
+
+    if init_basis == "noisy-logarithm":
+
+        np.random.seed(42)
+        # Half of profiles are logarithm functions and half are cancelling functions.
+        # Add (standard) Gaussian noise for variability in the profiles.
+
+
+def get_weight_matrix(weighting, X):
+
+    if weighting == "identity":
+        return np.eye(X.shape[0])
+
+    if weighting == "max-state":
+        return np.diag(np.max(X, axis=1))
+
+    # Current optimal.
+    if weighting == "max-state-scaled":
+        return np.diag(np.max(X, axis=1)) / 2
+
+    # Failed.
+    if weighting == "max-state-log":
+        return np.diag(1 + np.log(np.max(X, axis=1))) 
 
 
 def get_gdl_model(X, exp_config, model_config, L_row, L_col):
@@ -77,7 +100,7 @@ def get_weighted_mf_conv_model(X, exp_config, model_config):
         X_train=X, 
         V_init=get_basis(model_config.init_basis, rank=exp_config.rank, X=X), 
         R=model_config.R, 
-        W=model_config.W,
+        W=get_weight_matrix(model_config.weighting, X=X),
         K=model_config.K,
         lambda1=model_config.lambda1, 
         lambda2=model_config.lambda2, 
@@ -154,7 +177,8 @@ def get_weighted_mf_tv_model(X, exp_config, model_config):
         X_train=X, 
         V_init=get_basis(model_config.init_basis, rank=exp_config.rank, X=X), 
         R=model_config.R, 
-        W=model_config.W,
+        W=get_weight_matrix(model_config.weighting, X=X),
+        J=model_config.J, 
         gamma=model_config.gamma,
         lambda1=model_config.lambda1, 
         lambda2=model_config.lambda2, 
@@ -180,6 +204,7 @@ def get_mf_tv_model(X, exp_config, model_config):
         X_train=X, 
         V_init=get_basis(model_config.init_basis, rank=exp_config.rank, X=X), 
         R=model_config.R, 
+        J=model_config.J, 
         gamma=model_config.gamma,
         lambda1=model_config.lambda1, 
         lambda2=model_config.lambda2, 

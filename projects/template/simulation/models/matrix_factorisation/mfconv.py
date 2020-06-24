@@ -216,6 +216,7 @@ class WeightedMFConv(MFConv):
         self.W2 = self.W ** 2
         self.L1_U, self.Q1_U = np.linalg.eigh(self.lambda1 * np.linalg.inv(self.W2))
 
+    # TODO: Include J matrix.
     def _update_V(self):
 
         L2_V, Q2_V = np.linalg.eigh(self.U.T @ self.W2 @ self.U)

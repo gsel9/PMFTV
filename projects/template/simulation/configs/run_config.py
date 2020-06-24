@@ -36,6 +36,7 @@ class ExperimentConfig(BaseConfig):
 			"shuffle": False,
 			"val_size": 0,
 			"patience": 0,
+			"chances_to_improve": 0,
 			"monitor_loss": True,
 			"tol": 1e-5
 		}
