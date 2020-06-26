@@ -44,7 +44,7 @@ def set_exp_config(hparams, counter, path_to_results):
         num_epochs=1000,
         n_kfold_splits=0,
         time_lag=4,
-        epochs_per_display=1100,
+        epochs_per_display=100,
         epochs_per_val=20,
         seed=42,
         monitor_loss=True,
@@ -52,7 +52,9 @@ def set_exp_config(hparams, counter, path_to_results):
         early_stopping=True,
         val_size=0.2,
         patience=500,
-        chances_to_improve=2
+        chances_to_improve=2,
+        subgroup=hparams["subgroup"] if "subgroup" in hparams else None,
+        resample=hparams["resample"] if "resample" in hparams else False,
     )
 
     return exp_config
@@ -60,31 +62,26 @@ def set_exp_config(hparams, counter, path_to_results):
 
 def run_grid_search():
 
-    counter_offset = 
-
-    #####   !!!
-    #       !!!    TODO: Get weight matrix from analysis of unweighted model.
-    ####    !!!
+    counter_offset = 9
 
     model_type = "WMFTV"
     path_to_results = "/Users/sela/Desktop/tsd_code/results/wmf_tv/"
-    
-    experiment = "weighting"
+    experiment = "weighting" 
 
     param_config = {
-        "lambda1": [20],
-        "lambda2": [0.01],
+        "lambda1": [1], 
+        "lambda2": [1],
         "lambda3": [10],
         "init_basis": ["hmm"],
-        "rank": [35],
+        "rank": [30],
         "num_iter": [70],
         "n_time_points": [321],
         "gamma": [0.5],
-        "weighting": [""]
+        "weighting": ["relative"]
     }
 
     param_grid = ParameterGrid({**param_config})
-    Parallel(n_jobs=)(
+    Parallel(n_jobs=1)(
         delayed(matrix_completion)(
             set_exp_config(param_combo, counter + counter_offset, f"{path_to_results}/{experiment}"), 
             set_model_config(param_combo, model_type=model_type)
@@ -97,19 +94,31 @@ def run_kfold_grid_search():
 
     counter_offset = 0
 
+    model_type = "WMFTV"
+    path_to_results = "/Users/sela/Desktop/tsd_code/results/wmf_tv/"
+    experiment = "weighting" 
+
     param_config = {
-        "max_iter": [1],
-        "lambda2": [1],
-        "lambda3": [1, 3],
+        "lambda1": [10], 
+        "lambda2": [0.1],
+        "lambda3": [10],
         "init_basis": ["hmm"],
-        "rank": [15],
-        "n_time_points": [321]
+        "rank": [30],
+        "num_iter": [70],
+        "n_time_points": [321],
+        "gamma": [0.5],
+        "weighting": ["max-state-scaled-max"],
+        "subgroup": [3, 4]
     }
 
     param_grid = ParameterGrid({**param_config})
-    for param_combo in param_grid:
-        kfold_matrix_completion(set_exp_config(param_combo, counter + counter_offset), set_model_config(param_combo))
-        counter = counter + 1
+    Parallel(n_jobs=2)(
+        delayed(kfold_matrix_completion)(
+            set_exp_config(param_combo, counter + counter_offset, f"{path_to_results}/{experiment}"), 
+            set_model_config(param_combo, model_type=model_type)
+        ) 
+        for counter, param_combo in enumerate(param_grid)
+    )
    
 
 if __name__ == '__main__':

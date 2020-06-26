@@ -3,6 +3,7 @@ import numpy as np
 from simulation.configs import (
     WeightedMFConvConfig,
     WeightedMFTVConfig,
+    MFConvConfig,
     MFLarsConfig, 
     MFTVConfig
 )
@@ -16,6 +17,16 @@ def set_model_config(hparams, model_type):
 
     if model_type == "GDL":
         pass
+
+    if model_type == "MFConv":
+        return MFConvConfig(
+            lambda1=hparams["lambda1"],
+            lambda2=hparams["lambda2"],
+            lambda3=hparams["lambda3"],
+            init_basis=hparams["init_basis"],
+            K=laplacian_kernel_matrix(hparams["n_time_points"]),
+            R=finite_difference_matrix(hparams["n_time_points"])
+        )
 
     if model_type == "WMFConv":
         return WeightedMFConvConfig(

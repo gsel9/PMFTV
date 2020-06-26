@@ -8,29 +8,30 @@ from simulation.models.inference.map import MAP
 
 def reconstruct_profiles():
 
-    # MFConv; MFLars; MFTV; WMFConv: WMFTV
-    model_type = "WMFTV"
+    # MFConv; MFLars; MFTV; WMFConv; WMFTV; MFConv
+    model_type = "MFConv"
     base_path = "/Users/sela/Desktop/tsd_code/results"
-    experiment = "wmf_tv/testing"
-    exp_id = "" #opt_params_weighted  
+    experiment = "cmf/testing"
+    exp_id = "undersampling" 
 
     param_config = {
         "lambda0": 1.0,
-        "lambda1": 20,
-        "lambda2": 0.01,
-        "lambda3": 10,
+        "lambda1": 0.5, #10
+        "lambda2": 0.001, #0.1
+        "lambda3": 300, #10
         "num_iter": 70, 
         "init_basis": "hmm",
-        "rank": 30, 
+        "rank": 15, 
         "n_time_points": 321,
-        "gamma": 0.5
+        "gamma": 0.5,
+        #"weighting": "max-state-scaled-max"
     }
 
-    # TODO: 
+    # TODO:
     # * new filtered screening data
     # * Use input() to verify exp params + implement `set_exp_config`.
     # * Optimise `theta` as hyperparameter for prediction model.
- 
+    
     exp_config = ExperimentConfig(
         path_data_file="/Users/sela/Desktop/tsd_code/data/screening_filtered/train/X_train.npy",
         #path_data_file=f"/Users/sela/Desktop/recsys_paper/data/dgd/{exp_id}/train/X_train.npy",
@@ -39,24 +40,24 @@ def reconstruct_profiles():
         path_to_results=f"{base_path}/{experiment}",
         save_only_configs=False,
         #num_train_samples=2,
-        num_epochs=1000,#780,
-        n_kfold_splits=0,
+        num_epochs=500,
+        n_kfold_splits=10,
         time_lag=4,
         epochs_per_display=1100,
-        epochs_per_val=20,
         seed=42,
         monitor_loss=True,
         domain=[1, 4],
+        resample=True,
+        #epochs_per_val=20,
         early_stopping=False,
-        #val_size=0.2,
-        patience=500,
-        chances_to_improve=2
+        val_size=0,
+        #patience=500,
+        #chances_to_improve=2,
     )
 
     matrix_completion(exp_config, set_model_config(param_config, model_type=model_type))
 
     X_test = np.load("/Users/sela/Desktop/tsd_code/data/screening_filtered/test/X_test.npy")
-    #X_test = np.load(f"/Users/sela/Desktop/recsys_paper/data/dgd/{exp_id}/test/X_test.npy")
     test_data = TrainTestDataset(X_test, time_lag=exp_config.time_lag)
 
     estimator = MAP(M_train=np.load(f"{base_path}/{experiment}/{exp_id}_M_hat.npy"), theta=2.5)

@@ -1,6 +1,6 @@
 import numpy as np
 
-from .splitting import sample_subset
+from .sampling import sample_subset, sample_subgroup, resample
 
 
 def data_summary(data, run_config=None, training=True):
@@ -20,6 +20,15 @@ def load_data_matrix(exp_config, training=True):
 
     X = np.load(exp_config.path_data_file)
     print(f"Loaded {np.shape(X)} data matrix from: {exp_config.path_data_file}")
+
+    # NOTE: exp_config.subgroup can be <int> or <list>.
+    if exp_config.subgroup is not None:
+        print("Sampling subset")
+        X = sample_subgroup(X, exp_config.subgroup)
+
+    if exp_config.resample:
+        print("Resampling")
+        X = resample(X)
 
     if training:
         num_subset_samples = exp_config.num_train_samples

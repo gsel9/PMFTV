@@ -2,6 +2,8 @@ import warnings
 
 import numpy as np
 
+from sklearn.utils import class_weight
+
 from .gdl import MGCNN
 from .matrix_factorisation import (
     MFConv, MFLars, MFTV, WeightedMFConv, WeightedMFTV
@@ -47,6 +49,20 @@ def get_basis(init_basis, rank, X):
         # Add (standard) Gaussian noise for variability in the profiles.
 
 
+def create_class_weight(X, mu=0.15):
+
+    N = np.count_nonzero(X)
+    classes = np.unique(X[X != 0])
+
+    class_weight = []
+    for c in classes:
+        score = np.log(mu * N / np.sum(X == c))
+        weight = score if score > 1.0 else 1.0
+        class_weight.append(weight)
+
+    return class_weight / sum(class_weight)
+
+
 def get_weight_matrix(weighting, X):
 
     if weighting == "identity":
@@ -59,9 +75,61 @@ def get_weight_matrix(weighting, X):
     if weighting == "max-state-scaled":
         return np.diag(np.max(X, axis=1)) / 2
 
+    if weighting == "max-state-scaled-max":
+        return np.diag(np.max(X, axis=1)) / 4
+
+    if weighting == "max-state-normed":
+        W = np.diag(np.max(X, axis=1))
+        return W / np.linalg.norm(W)
+
+    if weighting == "binary":
+        W_id = np.diag(np.max(X, axis=1))
+        W = np.eye(X.shape[0])
+        W[W_id > 2] = 2
+        return W
+
+    if weighting == "scaled-norm":
+        W = np.linalg.norm(X, axis=1)
+        return np.diag(W / max(W))
+
+    if weighting == "sklearn-balanced":
+        weights = class_weight.compute_class_weight('balanced', np.unique(X[X != 0]), X[X != 0])
+        weights = weights / sum(weights)
+
+        W = np.diag(np.max(X, axis=1))
+        W[W == 1] = weights[0]
+        W[W == 2] = weights[1]
+        W[W == 3] = weights[2]
+        W[W == 4] = weights[3]
+        return W
+
+    if weighting == "custom-balanced":
+        weights = create_class_weight(X)
+
+        W = np.diag(np.max(X, axis=1))
+        W[W == 1] = weights[0]
+        W[W == 2] = weights[1]
+        W[W == 3] = weights[2]
+        W[W == 4] = weights[3]
+        return W
+
+    if weighting == "normalised":
+        return np.diag(np.max(X, axis=1)) / 4
+
     # Failed.
-    if weighting == "max-state-log":
-        return np.diag(1 + np.log(np.max(X, axis=1))) 
+    if weighting == "log-max-state-scaled-max":
+        w = 1 + np.log(np.max(X, axis=1))
+        return np.diag(w / max(w))
+
+    if weighting == "relative":
+        m = np.max(X, axis=1)
+        vals, counts = np.unique(m, return_counts=True)
+        weights = {int(v): counts[np.argmax(counts)] / counts[i] for i, v in enumerate(vals)}
+        w = np.zeros(X.shape[0])
+        for c, weight in weights.items():
+            w[m == int(c)] = weight
+
+        return np.diag(w)
 
 
 def get_gdl_model(X, exp_config, model_config, L_row, L_col):

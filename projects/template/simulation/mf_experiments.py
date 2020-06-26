@@ -20,6 +20,7 @@ from .utils.save_results import save_to_disk
 
 
 def kfold_matrix_completion(exp_config, model_config):
+    # NB: KFoldDataset and TrainTestDataset should have same API.
 
     print(f"Initiated experiment: `{exp_config.exp_id}`")
     print("-" * 30, "\n")
@@ -28,16 +29,25 @@ def kfold_matrix_completion(exp_config, model_config):
 
     _, X = load_data_from_file(exp_config, run_config=run_config)
 
-    print(f"Initiating K-fold CV:")
+    print(f"Initiating {exp_config.n_kfold_splits}-fold CV:")
     kfolds = KFoldDataset(X, n_splits=exp_config.n_kfold_splits, time_lag=exp_config.time_lag)
     for i in range(exp_config.n_kfold_splits):
 
         kfolds.i_fold = i
         print(f"Fold = {kfolds.i_fold}")
-        
-        # NB: KFoldDataset and TrainTestDataset should have same API.
-        _ = train_mf_model(exp_config, run_config, model_config, 
-                           kfolds.X_rec, val_set=kfolds)
+
+        if exp_config.early_stopping:
+
+            if exp_config.patience > exp_config.num_epochs:
+                raise ValueError("`patience` > num_epochs")
+
+            model = train_mf_model_early_stopping(exp_config=exp_config, 
+                                                  run_config=run_config, 
+                                                  model_config=model_config, 
+                                                  X_train=kfolds.X_rec, val_set=kfolds)
+        else:
+            _ = train_mf_model(exp_config, run_config, model_config, 
+                               kfolds.X_rec, val_set=kfolds)
 
     save_to_disk(exp_config=exp_config, run_config=run_config, model_config=model_config)
 
@@ -72,6 +82,7 @@ def matrix_completion(exp_config, model_config):
         model = train_mf_model(exp_config, run_config, model_config, X_rec,
                                val_set=val_set)
 
+    # NOTE: Lasso-Lars model.
     if hasattr(model_config, "alphas"):
         model_config.update_value("alphas", model.alphas)
 

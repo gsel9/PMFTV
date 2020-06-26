@@ -6,8 +6,7 @@ from .base import MFBase
 class MFTV(MFBase):
 
     def __init__(self, X_train, V_init, R=None, J=None, rank=5, num_iter=100, name="MFTV",
-                 lambda0=1.0, lambda1=1.0, lambda2=1.0, lambda3=1.0, gamma=0.5, warm_start=True,
-                 init_matrices=True):
+                 lambda0=1.0, lambda1=1.0, lambda2=1.0, lambda3=1.0, gamma=0.5, init_matrices=True):
 
         MFBase.__init__(self)
 
@@ -15,7 +14,6 @@ class MFTV(MFBase):
         self.V = V_init
         self.rank = rank
         self.num_iter = num_iter
-        self.warm_start = warm_start
         self.name = name
 
         # Regularization parameters
@@ -54,10 +52,7 @@ class MFTV(MFBase):
         # Dual and auxillary variables.
         self.Y = np.zeros_like(self.V)
 
-        if self.warm_start:
-            V_bar = self.V
-        else:
-            V_bar = np.zeros_like(self.V)
+        V_bar = self.V
 
         A = np.linalg.inv(self.tau * self.U.T @ self.U + self.Ir)
 
@@ -73,6 +68,38 @@ class MFTV(MFBase):
 
             # NOTE: Using theta = 1.
             V_bar = 2 * V_next - self.V
+
+            self.V = V_next
+
+    def _update_V_accelerated(self):
+        # NOTE: If self.n_iter_ > 0: uses solutions from previous run in initialisation.
+        # Re-initialising dual variable with zeros gives best performance. 
+
+        # Dual and auxillary variables.
+        self.Y = np.zeros_like(self.V)
+
+        V_bar = self.V
+
+        A = np.linalg.inv(self.tau * self.U.T @ self.U + self.Ir)
+
+        # Eval relative primal and dual residuals < tol for convergence.
+        for i in range(self.num_iter):
+
+            # Solve for dual variable.
+            self.Y = self.proj_inf_ball(self.Y + self.sigma * self.R @ V_bar)
+
+            # Solve for primal variable.
+            V_next = A @ (self.tau * self.U.T @ self.S + self.V.T - self.tau * self.Y.T @ self.R)
+            V_next = np.transpose(V_next)
+
+            # NOTE: Using gamma = 1.
+            theta = 1 / np.sqrt(1 + 2 * self.tau)
+
+            self.tau = theta * self.tau
+            self.sigma = self.sigma / theta
+
+            # NOTE: Using theta = 1.
+            V_bar = V_next + theta * (V_next - self.V)
 
             self.V = V_next
 
@@ -129,7 +156,6 @@ class WeightedMFTV(MFTV):
                       lambda0=lambda0, lambda1=lambda1, lambda2=lambda2, lambda3=lambda3, 
                       gamma=gamma, name=name, init_matrices=False)
 
-        # TEMP: Weight samples with high-risk/cancer 2x higher than other samples.
         self.W = W
 
         self._init_matrices(R, J)
@@ -161,7 +187,7 @@ class WeightedMFTV(MFTV):
         self.Y = np.zeros_like(self.V)
 
         V_bar = self.V
-        #A = np.linalg.inv(self.tau * self.U.T @ self.W @ self.U + self.Ir)
+
         A = np.linalg.inv(self.tau * self.U.T @ self.W @ self.U + self.Ir)
        
         # Eval relative primal and dual residuals < tol for convergence.

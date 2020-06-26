@@ -21,22 +21,3 @@ def train_val_split(X, exp_config):
     val_set = TrainTestDataset(X[val_idx], time_lag=exp_config.time_lag)
 
     return X[train_idx], val_set
-
-
-def sample_subset(X, num_subset_samples, seed, return_index=False):
-
-    np.random.seed(seed)
-    idx = np.random.choice(range(X.shape[0]), replace=False, size=num_subset_samples)
-
-    print(f"Selected subset of {num_subset_samples} samples")
-    if return_index:
-    	return idx, X[idx]
-
-    return X[idx]
-
-
-def sample_validation_set(X, exp_config):
-
-    X_val = sample_subset(X, exp_config.num_subset_samples, exp_config.seed)
-
-    val_set = TrainTestDataset(X_val, time_lag=exp_config.time_lag)
