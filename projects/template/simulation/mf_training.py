@@ -63,7 +63,6 @@ def train_mf_model_early_stopping(exp_config, run_config, model_config, X_train,
 
         model.train()
 
-        # Assumes improving until `patience` number of epochs.
         if epoch == exp_config.patience:
             run_config.U = model.U
             run_config.V = model.V
@@ -117,6 +116,7 @@ def train_mf_model_early_stopping(exp_config, run_config, model_config, X_train,
     return model
 
 
+# NOTE: This function can be shared by all training schemes.
 def validation_performance(run_config, val_set, optimise="mcc"):
 
     print("-- Predicting --")

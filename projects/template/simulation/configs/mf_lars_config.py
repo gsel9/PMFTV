@@ -5,9 +5,6 @@ from .base_config import BaseConfig
 
 class MFLarsConfig(BaseConfig):
 
-	# MB: Must match `model_generator.py`.
-	NAME = "MFLars"
-
 	def __init__(self, R=None, K=None, J=None, **kwargs):
 
 		super().__init__()
@@ -25,9 +22,6 @@ class MFLarsConfig(BaseConfig):
 			setattr(self, prop, value)
 
 		self.model_type = "MFLars"
-
-	def __name__(self):
-		return self.NAME
 
 	def update_value(self, key, value):
 

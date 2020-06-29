@@ -3,7 +3,7 @@ import numpy as np
 
 def finite_difference_matrix(T):
 
-	return (np.diag(np.pad(-np.ones(T - 1), (0, 1), 'constant')) + np.diag(np.ones(T-1), 1))
+	return np.diag(np.pad(-np.ones(T - 1), (0, 1), 'constant')) + np.diag(np.ones(T-1), 1)
 
 
 def laplacian_kernel_matrix(T):
@@ -13,53 +13,116 @@ def laplacian_kernel_matrix(T):
 	return [kernel(np.arange(T) - i) for i in np.arange(T)]
 
 
-def init_basis(X_train, init_V, rank):
+def get_coefs(init_coefs, rank, X):
 
-    if init_V == "ones":
-        return np.ones((X_train.shape[1], rank)) * np.mean(X_train[X_train.nonzero()])
-    
-    if init_V == "svd":
-        _, s, V = np.linalg.svd(X_train, full_matrices=False)
-        return np.dot(np.diag(np.sqrt(s[:rank])), V[:rank, :]).T
-
-    if init_V == "random":
+    if init_coefs == "random":
         np.random.seed(42)
-        return np.random.choice(range(1, 5), size=(X_train.shape[1], rank))
+        return np.random.random((X.shape[0], rank))
 
-    if init_V == "random_float":
+
+def get_basis(init_basis, rank, X):
+
+    # NOTE: The initial approach. 
+    if init_basis == "mean":
+
+        return np.ones((X.shape[1], rank)) * np.mean(X[X.nonzero()])
+
+    if init_basis == "svd":
+
+        _, s, V = np.linalg.svd(X, full_matrices=False)
+        return np.dot(U[:, :rank], np.diag(np.sqrt(s[:rank])))
+
+    if init_basis == "random":
         np.random.seed(42)
-        Z = np.random.random((X_train.shape[1], rank))
-        return 1 + 3 * ((Z - np.min(Z)) / (np.max(Z) - np.min(Z)))
+        return np.random.choice(range(1, 5), size=(X.shape[1], rank), p=(0.9, 0.05, 0.04, 0.01))
 
-    if init_V == "random_skewed":
+    if init_basis == "hmm":
+
         np.random.seed(42)
-        return np.random.choice(range(1, 5), size=(X_train.shape[1], rank), 
-                                p=[0.78375552, 0.14345807, 0.0719589 , 0.00082751])
+        data = np.load("/Users/sela/Desktop/tsd_code/data/hmm/base_set_300K.npy")
+        idx = np.random.choice(range(data.shape[0]), size=rank, replace=False)
 
-    if init_V == "random_skewed_ortho":
+        return np.transpose(data[idx])
+
+    if init_basis == "smooth-hmm":
+
         np.random.seed(42)
-        H = np.random.choice(range(1, 5), size=(X_train.shape[1], rank), 
-                                p=[0.78375552, 0.14345807, 0.0719589 , 0.00082751])
-        U, _, Vh = np.linalg.svd(H, full_matrices=False)
-        return U @ Vh
+        data = np.load("/Users/sela/Desktop/tsd_code/data/hmm/base_set_300K.npy")
+        idx = np.random.choice(range(data.shape[0]), size=rank, replace=False)
 
-    if init_V == "hmm":
-        X_hmm = np.load("/Users/sela/Desktop/recsys_paper/data/hmm/40p/train/M_train.npy")
+        return np.transpose(data[idx])
+
+    if init_basis == "noisy-logarithm":
+
         np.random.seed(42)
-        samples = np.random.choice(X_hmm.shape[0], size=rank)
-        return X_hmm[samples].T
+        # Half of profiles are logarithm functions and half are cancelling functions.
+        # Add (standard) Gaussian noise for variability in the profiles.
 
-    if init_V == "hmm_svd":
-        X_hmm = np.load("/Users/sela/Desktop/recsys_paper/data/hmm/40p/train/M_train.npy")
-        np.random.seed(42)
-        samples = np.random.choice(X_hmm.shape[0], size=rank)
-        Z = X_hmm[samples]
 
-        _, s, V = np.linalg.svd(Z, full_matrices=False)
-        return np.dot(np.diag(np.sqrt(s[:rank])), V[:rank, :]).T
+def get_weight_matrix(weighting, X):
 
-    if init_V == "ortho":
-        np.random.seed(42)
-        H = np.random.choice(range(1, 5), size=(X_train.shape[1], rank))
-        U, _, Vh = np.linalg.svd(H, full_matrices=False)
-        return U @ Vh
+    if weighting == "identity":
+        return np.eye(X.shape[0])
+
+    if weighting == "max-state":
+        return np.diag(np.max(X, axis=1))
+
+    # Current optimal.
+    if weighting == "max-state-scaled":
+        return np.diag(np.max(X, axis=1)) / 2
+
+    if weighting == "max-state-scaled-max":
+        return np.diag(np.max(X, axis=1)) / 4
+
+    if weighting == "max-state-normed":
+        W = np.diag(np.max(X, axis=1))
+        return W / np.linalg.norm(W)
+
+    if weighting == "binary":
+        W_id = np.diag(np.max(X, axis=1))
+        W = np.eye(X.shape[0])
+        W[W_id > 2] = 2
+        return W
+
+    if weighting == "scaled-norm":
+        W = np.linalg.norm(X, axis=1)
+        return np.diag(W / max(W))
+
+    if weighting == "sklearn-balanced":
+        weights = class_weight.compute_class_weight('balanced', np.unique(X[X != 0]), X[X != 0])
+        weights = weights / sum(weights)
+
+        W = np.diag(np.max(X, axis=1))
+        W[W == 1] = weights[0]
+        W[W == 2] = weights[1]
+        W[W == 3] = weights[2]
+        W[W == 4] = weights[3]
+        return W
+
+    if weighting == "custom-balanced":
+        weights = create_class_weight(X)
+
+        W = np.diag(np.max(X, axis=1))
+        W[W == 1] = weights[0]
+        W[W == 2] = weights[1]
+        W[W == 3] = weights[2]
+        W[W == 4] = weights[3]
+        return W
+
+    if weighting == "normalised":
+        return np.diag(np.max(X, axis=1)) / 4
+
+    # Failed.
+    if weighting == "log-max-state-scaled-max":
+        w = 1 + np.log(np.max(X, axis=1))
+        return np.diag(w / max(w))
+
+    if weighting == "relative":
+        m = np.max(X, axis=1)
+        vals, counts = np.unique(m, return_counts=True)
+        weights = {int(v): counts[np.argmax(counts)] / counts[i] for i, v in enumerate(vals)}
+        w = np.zeros(X.shape[0])
+        for c, weight in weights.items():
+            w[m == int(c)] = weight
+
+        return np.diag(w)

@@ -11,7 +11,7 @@ DTYPE = tf.float32
 # NB: For optimal predictive ability the loss should probably be modified to be a function 
 # of predicted diagnoses rather than reconstructed samples, at least if theta is to be updated, 
 # the prediction method should probably be called in reconstruction method.
-def set_loss(model_config, X_true, O, Lr, Lc):
+def get_gdl_loss_fn(model_config, X_true, O, Lr, Lc):
 
     loss_fn = OriginalLoss
 

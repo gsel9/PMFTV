@@ -1,12 +1,15 @@
 import numpy as np
+import tensorflow as tf
 
 from simulation.configs import (
     WeightedMFConvConfig,
     WeightedMFTVConfig,
     MFConvConfig,
     MFLarsConfig, 
-    MFTVConfig
+    MFTVConfig,
+    GDLConfig
 )
+
 from ..utils.special_matrices import (
 	laplacian_kernel_matrix,
 	finite_difference_matrix
@@ -16,9 +19,26 @@ from ..utils.special_matrices import (
 def set_model_config(hparams, model_type):
 
     if model_type == "GDL":
-        pass
+
+        # NOTE: Can have convergence criteria and skip optimising diffusion steps?
+        return GDLConfig(
+            row_graph_config=hparams["row_graph"], 
+            col_graph_config=hparams["col_graph"],
+            row_gamma=hparams["row_gamma"],
+            col_gamma=hparams["col_gamma"],
+            degree_row_poly=hparams["degree_row_poly"],
+            degree_col_poly=hparams["degree_col_poly"],
+            diffusion_steps=hparams["diffusion_steps"],
+            channels=hparams["channels"],
+            init_basis=hparams["init_basis"],
+            init_coefs=hparams["init_coefs"],
+            optimiser=hparams["optimiser"], 
+            learning_rate=hparams["learning_rate"],
+            loss=hparams["loss"]
+        )
 
     if model_type == "MFConv":
+
         return MFConvConfig(
             lambda1=hparams["lambda1"],
             lambda2=hparams["lambda2"],
@@ -29,6 +49,7 @@ def set_model_config(hparams, model_type):
         )
 
     if model_type == "WMFConv":
+
         return WeightedMFConvConfig(
             lambda1=hparams["lambda1"],
             lambda2=hparams["lambda2"],

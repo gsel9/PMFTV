@@ -17,7 +17,6 @@ import tensorflow as tf
 
 from .gdl_layers import SpectralGraphConv, DiffusionLTSM
 
-
 SEED = 42
 DTYPE = tf.float32
 
@@ -26,12 +25,12 @@ tf.random.set_seed(SEED)
 
 class MGCNN(tf.keras.Model):
     
-    def __init__(self, X, diffusion_steps, Lr, Lc, rank, domain, n_conv_feat=32, ord_row_conv=5, ord_col_conv=5,
-                 name="GDL", **kwargs):
+    def __init__(self, X_train, diffusion_steps, rank, domain, Lr=None, Lc=None, 
+                 n_conv_feat=32, ord_row_conv=5, ord_col_conv=5, name="GDL", **kwargs):
         
         super(MGCNN, self).__init__(name=name, **kwargs)
         
-        self.X = X
+        self.X_train = X_train
         self.Lr = Lr
         self.Lc = Lc
         self.rank = rank
@@ -43,6 +42,8 @@ class MGCNN(tf.keras.Model):
         self.diffusion_steps = diffusion_steps
 
         self.n_iter_ = 0
+        self.U = None 
+        self.V = None
 
         self.prep_tensors()
         self.init_trainable_layers()
@@ -68,34 +69,20 @@ class MGCNN(tf.keras.Model):
         self.convU.compute_cheb_polynomials(self.norm_Lr)
         self.convV.compute_cheb_polynomials(self.norm_Lc)
 
-        self.diffU = DiffusionLTSM(units=self.X.shape[0],
+        self.diffU = DiffusionLTSM(units=self.X_train.shape[0],
                                    n_conv_feat=self.n_conv_feat,
                                    output_dim=self.rank,
                                    seed=SEED, name='LSTMU')
 
-        self.diffV = DiffusionLTSM(units=self.X.shape[1],
+        self.diffV = DiffusionLTSM(units=self.X_train.shape[1],
                                    n_conv_feat=self.n_conv_feat,
                                    output_dim=self.rank,
                                    seed=SEED, name='LSTMV')
 
     def get_config(self):
        
-        config = {}
-        for layer in self.layers:
-            config[layer.name] = layer.get_config()
-
-        return config
+        return config = {layer.name: layer.get_config() for layer in self.layers}
     
-    # TODO: 
-    # * Use self.norm_X as samples from M distribution and implement Bayesian scheme. Make theta-parameter trainable.
-    # * Try also linear scheme. 
-    # * Is there a fast Softmax version to obtain probabilities?
-    # * Change relation Y to M by a distribution emphasising normals and high-grade less so. Let parameters be trainable. 
-    # NB: Check scheme is differentiable! Is more capable of learning such a parameter? Investigate ability in isolated 
-    # experiments. Connection to GANS.
-
-    # TODO: How about convolution after LSTM step and then another LSTM step to make deeper model?
-    # Skip-connections to prevent over-smoothing?
     def call(self, inputs):
         
         # NB: Reset hidden and carrier state for each epoch.
@@ -103,13 +90,13 @@ class MGCNN(tf.keras.Model):
         self.diffV.init_non_trainable_weights()
 
         # NB: Reset components for each epoch.
-        U_ = tf.cast(inputs[0], dtype=DTYPE)
-        V_ = tf.cast(inputs[1], dtype=DTYPE)
+        self.U = tf.cast(inputs[0], dtype=DTYPE)
+        self.V = tf.cast(inputs[1], dtype=DTYPE)
 
         for _ in range(self.diffusion_steps):
-            U_ += self.diffU(self.convU(U_))
-            V_ += self.diffV(self.convV(V_))
+            self.U += self.diffU(self.convU(self.U))
+            self.V += self.diffV(self.convV(self.V))
 
         self.n_iter_ += 1
 
-        return [U_, V_]
+        return [self.U, self.V]
