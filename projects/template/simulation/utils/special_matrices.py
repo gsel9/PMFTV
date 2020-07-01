@@ -34,7 +34,7 @@ def get_basis(init_basis, rank, X):
 
     if init_basis == "random":
         np.random.seed(42)
-        return np.random.choice(range(1, 5), size=(X.shape[1], rank), p=(0.9, 0.05, 0.04, 0.01))
+        return np.random.choice(range(1, 5), size=(X.shape[1], rank), p=(0.7, 0.15, 0.1, 0.05))
 
     if init_basis == "hmm":
 
@@ -66,6 +66,21 @@ def get_weight_matrix(weighting, X):
 
     if weighting == "max-state":
         return np.diag(np.max(X, axis=1))
+
+    if weighting == "exp-max-state":
+        # NOTE: Shift to not add extra weight to normals.
+        return np.diag(np.exp(np.max(X, axis=1) - 1))
+
+    if weighting == "exp-max-state-squared":
+        # NOTE: Shift to not weight normals (weight coef = 1).
+        w = np.max(X, axis=1) ** 2
+        return np.diag(np.exp(w - 1))
+
+    if weighting == "inv-imp":
+        return np.diag(1 / np.max(X, axis=1))
+
+    if weighting == "exp-inv-imp":
+        return np.diag(1 / np.max(X, axis=1))
 
     # Current optimal.
     if weighting == "max-state-scaled":

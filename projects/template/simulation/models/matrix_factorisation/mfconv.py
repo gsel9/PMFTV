@@ -179,6 +179,9 @@ class MFConv(MFBase):
 class WeightedMFConv(MFConv):
     """Weight the discrepancy S - UV^T to focus more attention on reconstructing 
     specific samples.
+
+    NOTE:
+        * Implementation performs inversion fo weights.
     """
 
     def __init__(self, X_train, V_init, R=None, W=None, K=None, rank=None,
@@ -189,19 +192,16 @@ class WeightedMFConv(MFConv):
                         init_matrices=False)
 
         self.W = W
-        #np.diag(np.max(X_train, axis=1))
-        #self.W[self.W == 2] = 0.4 #0.4 / 0.5
-        #self.W[self.W == 3] = 0.6 #0.6 / 1
-        #self.W[self.W == 4] = 1 #1 / 33
+        self.w = np.diag(self.W)
 
         self._init_matrices(R, K)
 
     def _init_matrices(self, R, K):
 
+        self.S = self.X_train.copy()
+
         self.N, self.T = np.shape(self.X_train)
         self.nonzero_rows, self.nonzero_cols = np.nonzero(self.X_train)
-
-        self.S = self.X_train.copy()
 
         self.O_train = np.zeros_like(self.X_train)
         self.O_train[self.X_train.nonzero()] = 1
@@ -209,30 +209,45 @@ class WeightedMFConv(MFConv):
         self.R = np.eye(self.T) if R is None else R
         self.K = np.eye(self.T) if K is None else K
 
-        self.RTCTCR = self.lambda2 * np.eye(self.T) + self.lambda3 * (self.K @ self.R).T @ (self.K @ self.R)
-        self.L1_V, self.Q1_V = np.linalg.eigh(self.RTCTCR)
+        self.RTCTCR = (self.K @ self.R).T @ (self.K @ self.R)
 
-        self.W2 = self.W ** 2
-        self.L1_U, self.Q1_U = np.linalg.eigh(self.lambda1 * np.linalg.inv(self.W2))
+        self.L2_U, self.Q2_U = np.linalg.eigh(self.lambda1 * np.linalg.inv(self.W))
+        self.L2_V, self.Q2_V = np.linalg.eigh((self.lambda3 / self.lambda0) * self.RTCTCR)
+        
+        # HACK: skip inversion and assumes weight matrix represents inversion of squared weights. 
+        # self.L2_U, self.Q2_U = np.linalg.eigh(self.lambda1 * self.W)
 
-    # TODO: Include J matrix.
+        # TEMP:
+        self.J = np.zeros((self.T, self.r))
+        self.J2 = (self.lambda2 / self.lambda0) * self.J
+
     def _update_V(self):
 
-        L2_V, Q2_V = np.linalg.eigh(self.U.T @ self.W2 @ self.U)
-        V_hat = (Q2_V.T @ (self.U.T @ self.W2 @ self.S)) @ self.Q1_V / np.add.outer(L2_V, self.L1_V)
-        self.V = np.transpose(Q2_V @ (V_hat @ self.Q1_V.T))
+        # NOTE: Replace A @ W @ B with A @ (self.w2[:, None] * B) for speed-up.
+        H = self.w[:, None] * self.U
+        
+        L1_V, Q1_V = np.linalg.eigh(self.U.T @ H + self.lambda2 * np.eye(self.r))
+        V_hat = (self.Q2_V.T @ self.S.T @ H) @ Q1_V / np.add.outer(self.L2_V, L1_V)
+        self.V = self.Q2_V @ (V_hat @ Q1_V.T)
 
     def _update_U(self):
 
-        L2_U, Q2_U = np.linalg.eigh(self.V.T @ self.V)
-        U_hat = (self.Q1_U.T @ (self.S @ self.V)) @ Q2_U / np.add.outer(self.L1_U, L2_U)
-        self.U = self.Q1_U @ (U_hat @ Q2_U)
+        L1_U, Q1_U = np.linalg.eigh(self.V.T @ self.V)
+        U_hat = (self.Q2_U.T @ self.S @ self.V @ Q1_U) / np.add.outer(self.L2_U, L1_U)
+        self.U = self.Q2_U @ (U_hat @ Q1_U.T)
 
     def loss(self):
 
-        # Updates to S occurs only at validation scores so must compare against U, V.
         frob_tensor = self.W @ (self.O_train * (self.X_train - self.U @ self.V.T))
         loss_frob = np.square(np.linalg.norm(frob_tensor)) / np.sum(self.O_train)
+
+        # if self.n_iter_ % 20 == 0:
+        #     print("-" * 20)
+        #     print("loss_frob", loss_frob)
+        #     print("norm U", np.square(np.linalg.norm(self.U)))
+        #     print("norm V", np.square(np.linalg.norm(self.V)))
+        #     print("conv", np.square(np.linalg.norm(self.R @ self.V)))
+        #     print("-" * 20)
 
         loss_reg1 = self.lambda1 * np.square(np.linalg.norm(self.U))
         loss_reg2 = self.lambda2 *  np.square(np.linalg.norm(self.V))

@@ -81,7 +81,7 @@ class MGCNN(tf.keras.Model):
 
     def get_config(self):
        
-        return config = {layer.name: layer.get_config() for layer in self.layers}
+        return {layer.name: layer.get_config() for layer in self.layers}
     
     def call(self, inputs):
         

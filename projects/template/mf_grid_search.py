@@ -51,7 +51,7 @@ def set_exp_config(hparams, counter, path_to_results):
         domain=[1, 4],
         early_stopping=True,
         val_size=0.2,
-        patience=500,
+        patience=200,
         chances_to_improve=2,
         subgroup=hparams["subgroup"] if "subgroup" in hparams else None,
         resample=hparams["resample"] if "resample" in hparams else False,
@@ -61,23 +61,26 @@ def set_exp_config(hparams, counter, path_to_results):
 
 
 def run_grid_search():
+    # NB: Should cast to <list> when parameter grid is <ndarray>.
 
-    counter_offset = 9
+    # TODO: Run TVMF verification w/wo weighting.
 
-    model_type = "WMFTV"
-    path_to_results = "/Users/sela/Desktop/tsd_code/results/wmf_tv/"
-    experiment = "weighting" 
+    counter_offset = 0
+
+    model_type = "MFTV"
+    path_to_results = "/Users/sela/Desktop/tsd_code/results/mf_tv"
+    experiment = "verification" 
 
     param_config = {
         "lambda1": [1], 
         "lambda2": [1],
-        "lambda3": [10],
-        "init_basis": ["hmm"],
-        "rank": [30],
-        "num_iter": [70],
+        "lambda3": [300],
+        "init_basis": ["random"],
+        "rank": [25],
         "n_time_points": [321],
+        #"weighting": ["identity"],
         "gamma": [0.5],
-        "weighting": ["relative"]
+        "num_iter": [70]
     }
 
     param_grid = ParameterGrid({**param_config})
@@ -96,7 +99,7 @@ def run_kfold_grid_search():
 
     model_type = "WMFTV"
     path_to_results = "/Users/sela/Desktop/tsd_code/results/wmf_tv/"
-    experiment = "weighting" 
+    experiment = "cmf" 
 
     param_config = {
         "lambda1": [10], 

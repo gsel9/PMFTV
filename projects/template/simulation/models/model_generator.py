@@ -11,7 +11,7 @@ from .matrix_factorisation import (
     MFConv, MFLars, MFTV, WeightedMFConv, WeightedMFTV
 )
 
-from ..utils.special_matrices import get_weight_matrix
+from ..utils.special_matrices import get_weight_matrix, get_basis
 
 
 def get_gdl_model(X, exp_config, model_config, subset_idx=None):

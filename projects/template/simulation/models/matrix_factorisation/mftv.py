@@ -49,12 +49,13 @@ class MFTV(MFBase):
         # NOTE: If self.n_iter_ > 0: uses solutions from previous run in initialisation.
         # Re-initialising dual variable with zeros gives best performance. 
 
-        # Dual and auxillary variables.
+        # Dual variable.
         self.Y = np.zeros_like(self.V)
 
+        # Auxillary variables.
         V_bar = self.V
-
-        A = np.linalg.inv(self.tau * self.U.T @ self.U + self.Ir)
+        SU = self.tau * self.S.T @ self.U
+        H = np.linalg.inv(self.Ir + self.tau * self.U.T @ self.U)
 
         # Eval relative primal and dual residuals < tol for convergence.
         for i in range(self.num_iter):
@@ -63,43 +64,10 @@ class MFTV(MFBase):
             self.Y = self.proj_inf_ball(self.Y + self.sigma * self.R @ V_bar)
 
             # Solve for primal variable.
-            V_next = A @ (self.tau * self.U.T @ self.S + self.V.T - self.tau * self.Y.T @ self.R)
-            V_next = np.transpose(V_next)
-
+            V_next = (SU + self.V - self.tau * self.R.T @ self.Y) @ H
+           
             # NOTE: Using theta = 1.
             V_bar = 2 * V_next - self.V
-
-            self.V = V_next
-
-    def _update_V_accelerated(self):
-        # NOTE: If self.n_iter_ > 0: uses solutions from previous run in initialisation.
-        # Re-initialising dual variable with zeros gives best performance. 
-
-        # Dual and auxillary variables.
-        self.Y = np.zeros_like(self.V)
-
-        V_bar = self.V
-
-        A = np.linalg.inv(self.tau * self.U.T @ self.U + self.Ir)
-
-        # Eval relative primal and dual residuals < tol for convergence.
-        for i in range(self.num_iter):
-
-            # Solve for dual variable.
-            self.Y = self.proj_inf_ball(self.Y + self.sigma * self.R @ V_bar)
-
-            # Solve for primal variable.
-            V_next = A @ (self.tau * self.U.T @ self.S + self.V.T - self.tau * self.Y.T @ self.R)
-            V_next = np.transpose(V_next)
-
-            # NOTE: Using gamma = 1.
-            theta = 1 / np.sqrt(1 + 2 * self.tau)
-
-            self.tau = theta * self.tau
-            self.sigma = self.sigma / theta
-
-            # NOTE: Using theta = 1.
-            V_bar = V_next + theta * (V_next - self.V)
 
             self.V = V_next
 
@@ -157,15 +125,11 @@ class WeightedMFTV(MFTV):
                       gamma=gamma, name=name, init_matrices=False)
 
         self.W = W
+        self.w = np.diag(self.W)
 
         self._init_matrices(R, J)
 
     def _init_matrices(self, R, J):
-
-        # Use only squared weights in computations.
-        self.W = self.W ** 2
-        # Faster to compute bottleneck step with vector.
-        self.w = np.diag(self.W)
 
         self.N, self.T = np.shape(self.X_train)
         self.nonzero_rows, self.nonzero_cols = np.nonzero(self.X_train)
@@ -178,30 +142,38 @@ class WeightedMFTV(MFTV):
 
         self.R = np.eye(self.T) if R is None else R
 
-    # TODO: Include J matrix.
+        self.L2_U, self.Q2_U = np.linalg.eigh(self.lambda1 * np.linalg.inv(self.W))
+
+    # TODO: Eval relative primal and dual residuals < tol for convergence.
     def _update_V(self):
         # NOTE: If self.n_iter_ > 0: uses solutions from previous run in initialisation.
         # Re-initialising dual variable with zeros gives best performance. 
 
-        # Dual and auxillary variables.
+        # Dual variable.
         self.Y = np.zeros_like(self.V)
 
+        # Auxillary variables.
         V_bar = self.V
-
-        A = np.linalg.inv(self.tau * self.U.T @ self.W @ self.U + self.Ir)
+        # NOTE: Computations with self.W is bottleneck.
+        WU = self.w[:, None] * self.U
+        Z = self.tau * self.S.T @ WU
+        H = np.linalg.inv(self.Ir + self.tau * self.U.T @ WU)
        
-        # Eval relative primal and dual residuals < tol for convergence.
         for i in range(self.num_iter):
 
             # Solve for dual variable.
             self.Y = self.proj_inf_ball(self.Y + self.sigma * self.R @ V_bar)
 
-            # Solve for primal variable. Computations with self.W is bottleneck.
-            #V_next = A @ (self.tau * self.U.T @ self.W @ self.S + self.V.T - self.tau * self.Y.T @ self.R)
-            V_next = A @ (self.tau * self.U.T @ (self.w[:, None] * self.S) + self.V.T - self.tau * self.Y.T @ self.R)
-            V_next = np.transpose(V_next)
-        
+            # Solve for primal variable. 
+            V_next = (Z + self.V - self.tau * self.R.T @ self.Y) @ H
+            
             # NOTE: Using theta = 1.
             V_bar = 2 * V_next - self.V
 
             self.V = V_next
+
+    def _update_U(self):
+
+        L1_U, Q1_U = np.linalg.eigh(self.V.T @ self.V)
+        U_hat = (self.Q2_U.T @ self.S @ self.V @ Q1_U) / np.add.outer(self.L2_U, L1_U)
+        self.U = self.Q2_U @ (U_hat @ Q1_U.T)

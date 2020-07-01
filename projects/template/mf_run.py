@@ -9,22 +9,20 @@ from simulation.models.inference.map import MAP
 def reconstruct_profiles():
 
     # MFConv; MFLars; MFTV; WMFConv; WMFTV; MFConv
-    model_type = "MFConv"
+    model_type = "WMFConv"
     base_path = "/Users/sela/Desktop/tsd_code/results"
-    experiment = "cmf/testing"
-    exp_id = "undersampling" 
+    experiment = "wmf_conv/testing"
+    exp_id = "init_run" 
 
     param_config = {
         "lambda0": 1.0,
-        "lambda1": 0.5, #10
-        "lambda2": 0.001, #0.1
-        "lambda3": 300, #10
-        "num_iter": 70, 
+        "lambda1": 1, 
+        "lambda2": 1, 
+        "lambda3": 300,
         "init_basis": "hmm",
-        "rank": 15, 
+        "rank": 25, 
         "n_time_points": 321,
-        "gamma": 0.5,
-        #"weighting": "max-state-scaled-max"
+        "weighting": "exp-max-state-squared"
     }
 
     # TODO:
@@ -34,25 +32,22 @@ def reconstruct_profiles():
     
     exp_config = ExperimentConfig(
         path_data_file="/Users/sela/Desktop/tsd_code/data/screening_filtered/train/X_train.npy",
-        #path_data_file=f"/Users/sela/Desktop/recsys_paper/data/dgd/{exp_id}/train/X_train.npy",
         rank=param_config["rank"],
         exp_id=exp_id,
         path_to_results=f"{base_path}/{experiment}",
         save_only_configs=False,
         #num_train_samples=2,
-        num_epochs=500,
-        n_kfold_splits=10,
+        num_epochs=1000,
         time_lag=4,
         epochs_per_display=1100,
         seed=42,
         monitor_loss=True,
         domain=[1, 4],
-        resample=True,
-        #epochs_per_val=20,
-        early_stopping=False,
-        val_size=0,
-        #patience=500,
-        #chances_to_improve=2,
+        epochs_per_val=20,
+        early_stopping=True,
+        val_size=0.2,
+        patience=200,
+        chances_to_improve=2,
     )
 
     matrix_completion(exp_config, set_model_config(param_config, model_type=model_type))
