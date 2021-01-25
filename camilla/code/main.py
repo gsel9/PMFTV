@@ -40,7 +40,6 @@ def main():
 
     t0 = time.time()
     model.fit(X_train)
-
     print(f"Matrix completion finished in {time.time() - t0}")
 
     test_data = TemporalDatasetPredict(X_test, prediction_rule='last_observed')
@@ -52,8 +51,8 @@ def main():
     print("Score:", matthews_corrcoef(test_data.y_true, y_pred))
 
     # Save some results.
-    np.save("../results/screening_data/M_hat.npy", model.U_ @ model.V_.T)
-    np.save("../results/screening_data/y_pred.npy", y_pred)
+    np.save("../results/M_hat.npy", model.U_ @ model.V_.T)
+    np.save("../results/y_pred.npy", y_pred)
 
 
 if __name__ == '__main__':
