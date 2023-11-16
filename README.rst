@@ -1,5 +1,5 @@
 =======
-matcomp
+longimc
 =======
 
 *Low-rank matrix completion for longitudinal data*
@@ -16,14 +16,10 @@ matcomp
         :target: https://matcomp.readthedocs.io/en/latest/?badge=latest
         :alt: Documentation Status
 
-.. image:: https://zenodo.org/badge/402865945.svg
-   :target: https://zenodo.org/badge/latestdoi/402865945
-
 .. image:: https://img.shields.io/badge/code%20style-black-000000.svg
     :target: https://github.com/psf/black
 
-matcomp is a Python library for learning coupled matrix factorizations with flexible constraints and regularization.
-For a quick introduction to coupled matrix factorization see the `online documentation <https://matcomp.readthedocs.io/en/latest/index.html>`_.
+matcomp is a Python library for ...
 
 Installation
 ------------
