@@ -1,15 +1,20 @@
 # third party
 import numpy as np
-from longimc.factor_models import utils
 
 # local
+from longimc.algorithms import utils
+
 from ._base import MatrixCompletionBase
 
 
 class CMF(MatrixCompletionBase):
-    """Matrix factorization with L2 and convolutional regularization.
+    r"""Matrix factorization with L2 and convolutional regularization.
     Factor updates are based on analytical estimates and will therefore
-    not permit and arbitrary weight matrix in the discrepancy term.
+    not permit and arbitrary weight matrix in the discrepancy term. Here is
+    inplace math :math:`r_e`.
+
+    .. math::
+       \min F(\mathbf{U}, \mathbf{V}}) + \mathcal{R}(\mathbf{U}, \mathbf{V}})
 
     Args:
             X: Sparse data matrix used to estimate factor matrices
@@ -45,6 +50,7 @@ class CMF(MatrixCompletionBase):
         self.mask = (self.X != 0).astype(np.float32)
 
         self.N, self.T = np.shape(X)
+        self.nz_rows, self.nz_cols = np.nonzero(X)
 
         self.V = self.init_basis()
         self.U = self.init_coefs()

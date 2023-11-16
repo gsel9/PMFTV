@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 
 # local
-from longimc.factor_models.convergence import FactorCovergence
+from longimc.algorithms.convergence import FactorCovergence
 
 
 class MatrixCompletionBase(ABC):
@@ -46,6 +46,7 @@ class MatrixCompletionBase(ABC):
             setattr(self, parameter, value)
         return self
 
+    # TODO: Must account for potential shift matrix
     @property
     def M(self):
         return np.array(self.U @ self.V.T, dtype=np.float32)
@@ -69,6 +70,10 @@ class MatrixCompletionBase(ABC):
         # estimate least-squares coefficients from shared basic profiles
         U_star = (2 * X @ self.V) @ np.linalg.inv(self.V.T @ self.V)
         return U_star @ self.V.T
+
+    @abstractmethod
+    def run_step(self):
+        ...
 
     def fit(self, X, y=None, verbose=1):
         """Run matrix completion on input matrix X using a factorization model."""

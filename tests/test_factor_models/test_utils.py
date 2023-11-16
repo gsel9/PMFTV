@@ -1,6 +1,6 @@
 import numpy as np
 from hypothesis import given, strategies
-from longimc.factor_models.utils import (  # theta_mle,
+from longimc.algorithms.utils import (  # theta_mle,
     basis_baseline_value,
     finite_difference_matrix,
     laplacian_kernel_matrix,

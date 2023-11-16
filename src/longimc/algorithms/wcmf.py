@@ -1,7 +1,7 @@
 # third party
 import numpy as np
 import tensorflow as tf
-from longimc.factor_models import utils
+from longimc.algorithms import utils
 
 # local
 from ._base import MatrixCompletionBase

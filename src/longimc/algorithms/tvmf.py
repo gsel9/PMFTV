@@ -3,18 +3,22 @@ import numpy as np
 
 # local
 from longimc.algorithms import utils
+
 from ._base import MatrixCompletionBase
 
 
 class TVMF(MatrixCompletionBase):
-    """Total variation regularization. 
-    
-    Based on the Chambolle Pock algorithm 
+    r"""Total variation regularization.
+
+    Based on the Chambolle Pock algorithm.
+
+    .. math::
+       \min F(\mathbf{U}, \mathbf{V}}) + \mathcal{R}(\mathbf{U}, \mathbf{V}})
 
     Args:
         MFBase (_type_): _description_
     """
-    
+
     def __init__(
         self,
         rank,
@@ -41,7 +45,7 @@ class TVMF(MatrixCompletionBase):
         self.n_iter_V = n_iter_V
         self.sigma = zeta
         self.tau = zeta
-        
+
     def _init_matrices(self, X):
         self.X = X
         self.S = self.X.copy()
@@ -70,10 +74,10 @@ class TVMF(MatrixCompletionBase):
 
         self.I_l1 = self.lambda1 * np.identity(self.r)
         self.I_l2 = self.lambda2 * np.identity(self.r)
-        
+
         self.Ir = np.eye(self.r) * (1 + self.lambda2 * self.tau)
 
-    # TODO: derive algorithm again with norm(V - J) 
+    # TODO: derive algorithm again with norm(V - J)
     def _update_V(self):
         # NOTE: If self.n_iter_ > 0: uses solutions from previous run in initialisation
         # re-initialising dual variable with zeros gives best performance
@@ -88,13 +92,12 @@ class TVMF(MatrixCompletionBase):
 
         # eval relative primal and dual residuals < tol for convergence
         for i in range(self.n_iter_V):
-
             # solve for dual variable
             self.Y = self.project_inf_ball(self.Y + self.sigma * self.R @ V_bar)
 
             # solve for primal variable
             V_next = (SU + self.V - self.tau * self.R.T @ self.Y) @ H
-           
+
             # NOTE: Using theta = 1.
             V_bar = 2 * V_next - self.V
 
@@ -102,15 +105,14 @@ class TVMF(MatrixCompletionBase):
 
     def project_inf_ball(self, X):
         """Projecting X onto the infininty ball of radius lambda3
-        amounts to element-wise clipping at +/- radius given by 
+        amounts to element-wise clipping at +/- radius given by
         ```python
             np.minimum(np.abs(X), radius) * np.sign(X)
         ```
         """
         return np.clip(X, a_min=-1.0 * self.lambda3, a_max=self.lambda3)
-        
-    def _update_U(self):
 
+    def _update_U(self):
         U = np.linalg.solve(
             self.V.T @ self.V + self.lambda1 * np.identity(self.r),
             self.V.T @ self.S.T,
@@ -120,9 +122,8 @@ class TVMF(MatrixCompletionBase):
     def _update_S(self):
         self.S = self.U @ self.V.T
         self.S[self.nz_rows, self.nz_cols] = self.X[self.nz_rows, self.nz_cols]
-        
-    def loss(self):
 
+    def loss(self):
         # Updates to S occurs only at validation scores so must compare against U, V.
         loss = np.square(np.linalg.norm(self.mask * (self.X - self.U @ self.V.T)))
         loss += self.lambda1 * np.square(np.linalg.norm(self.U))

@@ -1,4 +1,4 @@
-from .factor_models import CMF, SCMF, WCMF, MatrixCompletionBase
+from .algorithms import CMF, SCMF, WCMF, MatrixCompletionBase
 
 # from .util import model_factory, _and_log
 

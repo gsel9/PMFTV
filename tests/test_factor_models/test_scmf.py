@@ -2,7 +2,7 @@ import numpy as np
 from hypothesis import assume, given
 from hypothesis import strategies as st
 from hypothesis.extra.numpy import array_shapes, arrays
-from longimc.factor_models.scmf import _custom_roll, _take_per_row_strided
+from longimc.algorithms.scmf import _custom_roll, _take_per_row_strided
 
 
 @given(st.data())
