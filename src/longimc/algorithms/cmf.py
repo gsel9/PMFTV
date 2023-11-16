@@ -14,7 +14,7 @@ class CMF(MatrixCompletionBase):
     inplace math :math:`r_e`.
 
     .. math::
-       \min F(\mathbf{U}, \mathbf{V}}) + \mathcal{R}(\mathbf{U}, \mathbf{V}})
+       \min F(\mathbf{U}, \mathbf{V}) + R(\mathbf{U}, \mathbf{V})
 
     Args:
             X: Sparse data matrix used to estimate factor matrices
@@ -30,7 +30,7 @@ class CMF(MatrixCompletionBase):
         lambda2=1.0,
         lambda3=1.0,
         random_state=42,
-        missing_value=None,
+        missing_value=0,
     ):
         super().__init__(
             rank=rank,
@@ -93,7 +93,7 @@ class CMF(MatrixCompletionBase):
         self.S[self.nz_rows, self.nz_cols] = self.X[self.nz_rows, self.nz_cols]
 
     def loss(self):
-        "Compute the loss from the optimization objective"
+        "Evaluate the optimization objective"
 
         loss = np.square(np.linalg.norm(self.mask * (self.X - self.U @ self.V.T)))
         loss += self.lambda1 * np.square(np.linalg.norm(self.U))

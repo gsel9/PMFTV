@@ -41,6 +41,11 @@ class MatrixCompletionBase(ABC):
     def _init_matrices(self, X):
         ...
 
+    @abstractmethod
+    def loss(self):
+        "Evaluate the optimization objective"
+        ...
+
     def set_params(self, **parameters):
         for parameter, value in parameters.items():
             setattr(self, parameter, value)

@@ -11,57 +11,41 @@ class LarsMF(CMF):
     specific coefficients.
 
     .. math::
-       \min F(\mathbf{U}, \mathbf{V}}) + \mathcal{R}(\mathbf{U}, \mathbf{V}})
+       \min F(\mathbf{U}, \mathbf{V}) + R(\mathbf{U}, \mathbf{V})
+
+    Computes the Lasso path using the LARS algorithm.
 
     """
 
     def __init__(
         self,
-        X_train,
-        V_init,
-        R=None,
-        J=None,
-        K=None,
-        rank=None,
-        max_iter=None,
-        lambda0=1.0,
-        lambda1=None,
+        rank,
+        W=None,
+        n_iter=100,
+        n_iter_U=100,
+        gamma=1.0,
+        lambda1=1.0,
         lambda2=1.0,
-        lambda3=0.0,
-        name="MFLars",
-        verbose=0,
+        lambda3=1.0,
+        random_state=42,
+        missing_value=0,
     ):
-        CMF.__init__(
-            self,
-            name=name,
-            X_train=X_train,
-            V_init=V_init,
-            R=R,
-            J=J,
-            K=K,
+        super().__init__(
             rank=rank,
-            lambda0=lambda0,
+            W=W,
+            n_iter=n_iter,
+            gamma=gamma,
             lambda1=lambda1,
             lambda2=lambda2,
             lambda3=lambda3,
+            random_state=random_state,
+            missing_value=missing_value,
         )
 
-        self.max_iter = max_iter
-        self.verbose = verbose
+        self.n_iter_U = n_iter_U
 
         self.alpha = 1e-20
         self.alphas = None
-
-    def loss(self):
-        # Updates to S occurs only at validation scores so must compare against U, V.
-        frob_tensor = self.O_train * (self.X_train - self.U @ self.V.T)
-        loss_frob = np.square(np.linalg.norm(frob_tensor)) / np.sum(self.O_train)
-
-        loss_reg1 = sum(self.alphas * np.linalg.norm(self.U, ord=1, axis=1))
-        loss_reg2 = self.lambda2 * np.square(np.linalg.norm(self.V))
-        loss_reg3 = self.lambda3 * np.square(np.linalg.norm(self.R @ self.V))
-
-        return loss_frob + loss_reg1 + loss_reg2 + loss_reg3
 
     def _update_U(self):
         # NOTE:
@@ -72,16 +56,25 @@ class LarsMF(CMF):
         #   n_iter > max_iter. Thus, max_iter < rank impose sparsity.
         # * LassoLars is subclass of Lars which has argument `n_nonzero_coefs`.
         #   In LassoLars, `n_nonzero_coefs=max_iter`.
-        # * Weights tend to blow-up if fitting intercept.
+        # * Weights might blow-up if fitting intercept.
 
-        # NOTE: Computes Lasso path using LARS.
         reg = LassoLars(
             alpha=self.alpha,
             fit_path=False,
             normalize=True,
             fit_intercept=False,
-            max_iter=self.max_iter,
+            max_iter=self.n_iter_U,
         ).fit(self.V, self.S.T)
 
         self.U = reg.coef_
         self.alphas = np.squeeze(reg.alphas_)
+
+    def loss(self):
+        "Evaluate the optimization objective"
+
+        loss = np.square(np.linalg.norm(self.mask * (self.X - self.U @ self.V.T)))
+        loss += sum(self.alphas * np.linalg.norm(self.U, ord=1, axis=1))
+        loss += self.lambda2 * np.square(np.linalg.norm(self.V - self.J))
+        loss += self.lambda3 * np.square(np.linalg.norm(self.KD @ self.V))
+
+        return loss

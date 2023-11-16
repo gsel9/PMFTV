@@ -13,7 +13,7 @@ class TVMF(MatrixCompletionBase):
     Based on the Chambolle Pock algorithm.
 
     .. math::
-       \min F(\mathbf{U}, \mathbf{V}}) + \mathcal{R}(\mathbf{U}, \mathbf{V}})
+       \min F(\mathbf{U}, \mathbf{V}) + R(\mathbf{U}, \mathbf{V})
 
     Args:
         MFBase (_type_): _description_
@@ -124,6 +124,8 @@ class TVMF(MatrixCompletionBase):
         self.S[self.nz_rows, self.nz_cols] = self.X[self.nz_rows, self.nz_cols]
 
     def loss(self):
+        "Evaluate the optimization objective"
+
         # Updates to S occurs only at validation scores so must compare against U, V.
         loss = np.square(np.linalg.norm(self.mask * (self.X - self.U @ self.V.T)))
         loss += self.lambda1 * np.square(np.linalg.norm(self.U))
