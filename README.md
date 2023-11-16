@@ -1,6 +1,4 @@
-# LongiMC
-
-*Low-rank matrix completion for longitudinal data*
+# LongiMC - Low-rank matrix completion for longitudinal data
 
 # Installation
 
@@ -12,7 +10,11 @@ python -m pip install longimc
 
 # About
 
-matcomp is a Python library that adds support for ... 
+This Python library that adds support for low-rank matrix completion of longitudinal data. 
+
+$$
+\min_{\substack{\mathbf{U}, \mathbf{V}}}  \left \| \mathbf{W} \odot \left ( \mathbf{Y} - \mathbf{U} \mathbf{V}^\top \right ) \right \|_F^2 + \alpha_1 \left \| \mathbf{U} \right \|_F^2 + \alpha_2 \left \| \mathbf{V} \right \|_F^2 + \alpha_3 \left \| \mathbf{R} \mathbf{V} \right \|_F^2 
+$$
 
 # Example
 
