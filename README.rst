@@ -28,13 +28,8 @@ To install matcomp and all MIT-compatible dependencies from PyPI, you can run
 
 .. code::
 
-        pip install matcomp
+        pip install longimc
 
-If you also want to enable total variation regularization, you need to install all components, which comes with a MIT lisence
-
-.. code::
-
-        pip install matcomp[gpl]
 
 About
 -----
