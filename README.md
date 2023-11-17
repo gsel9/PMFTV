@@ -10,7 +10,26 @@ python -m pip install lmc
 
 # Quick start example 
 
-TODO: simple example 
+```python
+# local
+from lmc import CMC
+from utils import train_test_data
+
+# third party
+from sklearn.metrics import mean_squared_error
+
+X, O_train, O_test = train_test_data()
+
+X_train = X * O_train
+X_test = X * O_test
+
+model = CMC(rank=5, n_iter=103)
+model.fit(X_train)
+
+Y_test = model.M * O_test
+
+score = mean_squared_error(X_test, Y_test)
+```
 
 # About
 
@@ -19,7 +38,7 @@ This Python library that adds support for low-rank matrix completion of longitud
 **A low-rank matrix factorization model for completing longitudinal data**: 
 A partially observed data matrix $X \in \mathbb{R}^{N \times T}$. Each row $1 \leq n \leq N$ of $X$ is assumed to be a partially observed longitudinal profile. Assumptions:
 * The observed entries $(n, t) \in \Omega$ of $X$ are possibly inaccurate measurements of a continuous \emph{latent state} $M_{n,t}$ that evolves slowly over time.
-* Furthermore, we assume that each latent profile is a linear combination of a small number of basic profiles $\mathbf{v}_1, \dots, \mathbf{v}_r$ with
+* Furthermore, we assume that each latent profile is a linear combination of a small number of *basic profiles* $\mathbf{v}_1, \dots, \mathbf{v}_r$ with
 $r \ll \min \{N,T\}$.
 
 Then the matrix $\textbf{M}$ of all such profiles can be approximately decomposed as $\textbf{M} \approx \mathbf{U}\mathbf{V}^\top$ with $\mathbf{V} \in \mathbb{R}^{T \times r}$ being the collection of basic profiles
@@ -28,11 +47,11 @@ model.
 
 The general objective is on the form
 $$\min_{\substack{\mathbf{U}, \mathbf{V}}} F(\mathbf{U}, \mathbf{V}) + R(\mathbf{U}, \mathbf{V})$$
-where $F$ denotes a data discrepancy term and $R$ is a regularization term. 
+The term $F$ denotes a convex data discrepancy term and $R$ is a possibly non-smooth or possibly non-convex regularization term. 
 
 **Optimization**:
 
-Alternating gradient descent. 
+The optimization algorithm is based on alternating minimization.
 
 **Models**:
 
@@ -43,6 +62,9 @@ Specific implementations are listed in the following.
 $$F = ||P_\Omega (X - UV^\top)||_F^2$$
 
 $$R = || U ||_F^2 + || V ||_F^2 + || CRV ||_F^2$$
+
+Here, $R$ is a forward difference matrix and $C$ is a the Toeplitz matrix with entries
+$C_{i, j} = \exp(- \gamma \lvert i-j\rvert)$. This leads to a weaker penalisation of the profiles at faster scales and consequently allows for a larger local variability.
 
 ## Weighted CMC (WCMC)
 
@@ -65,7 +87,7 @@ $$F = ||P_\Omega (X - UV^\top)||_F^2$$
 
 $$R = || U ||_F^2 + || V ||_F^2 + || \nabla V ||_1$$
 
-## Lars MC (LarsMC):
+## Least-angle regression MC (LarsMC):
 
 The least-angle regression (Lars) MC fits an L1 prior as regularizer of the coefficient matrix $U$. The optimization objective for LarsMC consists of 
 
@@ -81,7 +103,7 @@ Usecases
 
 Imbalanced data, WCMC
 
-## Transductive(?) matrix completion
+## Inductive matrix completion
 
 ## Rank selection
 
