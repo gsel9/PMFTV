@@ -1,5 +1,7 @@
 # LMC - Low-rank matrix completion for longitudinal data
 
+**TBC**
+
 # Installation
 
 To install `lmc`, you can run
@@ -75,11 +77,15 @@ Here, $W \in \mathbb{R}^{N \times T}$ sets all matrix entries $(\tilde{n}, \tild
 
 $$R = || U ||_F^2 + || V ||_F^2 + || CRV ||_F^2$$
 
+One solution uses gradient descent. The other uses ADMM and involves an extra parameter $\beta$.
+
 ## Shifted CMC (SCMC)
 
 $$F =  ||W \odot (X - UV^\top Z)||_F^2$$
 
 $$R = || U ||_F^2 + || V ||_F^2 + || CRV ||_F^2$$
+
+Shifts can be (1) integer shifts; (2) continous in time.
 
 ## Total variation MC (TVMC):
 
