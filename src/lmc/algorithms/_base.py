@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 
 # local
-from longimc.algorithms.convergence import FactorCovergence
+from lmc.algorithms.convergence import FactorCovergence
 
 
 class MatrixCompletionBase(ABC):

@@ -3,7 +3,7 @@ Simple example
 """
 
 # local
-from longimc import CMF  # , SCMF, WCMF
+from lmc import CMC 
 
 # third party
 from sklearn.metrics import mean_squared_error
@@ -16,12 +16,12 @@ def main():
     X_train = X * O_train
     X_test = X * O_test
 
-    model = CMF(rank=5, n_iter=103)
+    model = CMC(rank=5, n_iter=103)
     model.fit(X_train)
 
     Y_test = model.M * O_test
 
-    score = mean_squared_error(X_test.ravel(), Y_test.ravel())
+    score = mean_squared_error(X_test, Y_test)
     print(score)
 
 

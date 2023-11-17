@@ -62,7 +62,7 @@ def _take_per_row_strided(A, start_idx, n_elem):
     return out
 
 
-class SCMF(MatrixCompletionBase):
+class SCMC(MatrixCompletionBase):
     """Shifted matrix factorization with L2 and convolutional regularization (optional).
 
     Factor updates are based on gradient descent approximations, permitting an arbitrary

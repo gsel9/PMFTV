@@ -6,7 +6,7 @@ import numpy as np
 # import pytest
 from hypothesis import given, strategies
 from hypothesis.extra.numpy import array_shapes, arrays
-from longimc import CMF
+from lmc import CMF
 
 
 # TODO: find a way to parametrize test for multiple factor models

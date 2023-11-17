@@ -3,10 +3,10 @@ import numpy as np
 from sklearn.linear_model import LassoLars
 
 # local
-from .cmf import CMF
+from .cmc import CMC
 
 
-class LarsMF(CMF):
+class LarsMC(CMC):
     r"""Computes Lasso path using LARS algorithm for sparsity in female-
     specific coefficients.
 
@@ -22,6 +22,7 @@ class LarsMF(CMF):
         rank,
         W=None,
         n_iter=100,
+        alpha=1e-20,
         n_iter_U=100,
         gamma=1.0,
         lambda1=1.0,
@@ -42,22 +43,15 @@ class LarsMF(CMF):
             missing_value=missing_value,
         )
 
+        self.alpha = alpha
         self.n_iter_U = n_iter_U
 
-        self.alpha = 1e-20
         self.alphas = None
 
     def _update_U(self):
-        # NOTE:
-        # * Transposing S \approx UV^\top yields a LS problem
-        #   s^\top \approx Vu^\top on the required scikit-learn form
-        #   y = Xw, giving a transposed solution to our problem.
-        # * Algorithm iterates until all variables in acive set or
-        #   n_iter > max_iter. Thus, max_iter < rank impose sparsity.
-        # * LassoLars is subclass of Lars which has argument `n_nonzero_coefs`.
-        #   In LassoLars, `n_nonzero_coefs=max_iter`.
-        # * Weights might blow-up if fitting intercept.
-
+        
+        # Expected input is y = Wx. With model S = UV.T this translates
+        # to y = S.T, w = U.T, X = V.
         reg = LassoLars(
             alpha=self.alpha,
             fit_path=False,
