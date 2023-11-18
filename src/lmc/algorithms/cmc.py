@@ -1,13 +1,10 @@
-# third party
 import numpy as np
-
-# local
-from longimc.algorithms import utils
+from lmc.algorithms import utils
 
 from ._base import MatrixCompletionBase
 
 
-class CMF(MatrixCompletionBase):
+class CMC(MatrixCompletionBase):
     r"""Matrix factorization with L2 and convolutional regularization.
     Factor updates are based on analytical estimates and will therefore
     not permit and arbitrary weight matrix in the discrepancy term. Here is
@@ -15,6 +12,9 @@ class CMF(MatrixCompletionBase):
 
     .. math::
        \min F(\mathbf{U}, \mathbf{V}) + R(\mathbf{U}, \mathbf{V})
+
+    The alternating minimization is based on the exact solution to the
+    minimizers :math:`\partialF/\partial U` and :math:`\partialF/\partial V`.
 
     Args:
             X: Sparse data matrix used to estimate factor matrices

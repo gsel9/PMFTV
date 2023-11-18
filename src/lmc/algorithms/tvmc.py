@@ -2,12 +2,12 @@
 import numpy as np
 
 # local
-from longimc.algorithms import utils
+from lmc.algorithms import utils
 
 from ._base import MatrixCompletionBase
 
 
-class TVMF(MatrixCompletionBase):
+class TVMC(MatrixCompletionBase):
     r"""Total variation regularization.
 
     Based on the Chambolle Pock algorithm.

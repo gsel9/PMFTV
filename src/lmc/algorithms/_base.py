@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 
 # local
-from longimc.algorithms.convergence import FactorCovergence
+from lmc.algorithms.convergence import FactorCovergence
 
 
 class MatrixCompletionBase(ABC):
@@ -33,7 +33,6 @@ class MatrixCompletionBase(ABC):
         self.missing_value = missing_value
         self.early_stopping = early_stopping
 
-        self.X = None
         self.n_iter_ = None
         self.losses_ = None
 
