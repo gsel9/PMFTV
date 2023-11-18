@@ -1,7 +1,4 @@
-# third party
 import numpy as np
-
-# local
 from lmc.algorithms import utils
 
 from ._base import MatrixCompletionBase
@@ -15,8 +12,8 @@ class CMC(MatrixCompletionBase):
 
     .. math::
        \min F(\mathbf{U}, \mathbf{V}) + R(\mathbf{U}, \mathbf{V})
-       
-    The alternating minimization is based on the exact solution to the 
+
+    The alternating minimization is based on the exact solution to the
     minimizers :math:`\partialF/\partial U` and :math:`\partialF/\partial V`.
 
     Args:

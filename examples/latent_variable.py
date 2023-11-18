@@ -1,7 +1,11 @@
 """A latent variable model.
 """
 
+# third party
 import numpy as np
+
+# local
+from lmc import CMC
 
 
 def predict_proba(Y, M, t_pred, theta, number_of_states):
@@ -21,7 +25,6 @@ def predict_proba(Y, M, t_pred, theta, number_of_states):
 
     logl = np.ones((Y.shape[0], M.shape[0]))
     for i, y in enumerate(Y):
-
         omega = y != 0
         logl[i] = np.sum(
             -1.0 * theta * ((y[omega])[None, :] - M[:, omega]) ** 2, axis=1
@@ -30,9 +33,17 @@ def predict_proba(Y, M, t_pred, theta, number_of_states):
     proba_z = np.empty((Y.shape[0], number_of_states))
     domain = np.arange(1, number_of_states + 1)
     for i in range(Y.shape[0]):
-
         proba_z[i] = np.exp(logl[i]) @ np.exp(
             -1.0 * theta * (M[:, t_pred[i], None] - domain) ** 2
         )
 
     return proba_z / (np.sum(proba_z, axis=1))[:, None]
+
+
+def main():
+    model = CMC(rank=5, n_iter=103)
+    print(model)
+
+
+if __name__ == "__main__":
+    main()
