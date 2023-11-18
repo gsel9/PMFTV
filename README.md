@@ -2,6 +2,9 @@
 
 **TBC**
 
+# TODO:
+* Make an example plotting basic profiles and coefficients for different regularisations 
+
 # Installation
 
 To install `lmc`, you can run
