@@ -22,7 +22,7 @@ if __name__ == "__main__":
             author="Severin Elvatun",
             author_email="langberg91@gmail.com",
             description="Low-rank matrix completion for longitudinal data",
-            long_description=read("README.rst"),
+            long_description=read("README.md"),
         )
     except:  # noqa
         print(

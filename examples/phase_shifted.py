@@ -1,9 +1,8 @@
-"""
-Simple example
+"""Demonstrating the utility of SCMC on phase shifted profiles.
 """
 
 # local
-from lmc import CMC 
+from lmc import SCMC
 
 # third party
 from sklearn.metrics import mean_squared_error
@@ -16,7 +15,7 @@ def main():
     X_train = X * O_train
     X_test = X * O_test
 
-    model = CMC(rank=5, n_iter=103)
+    model = SCMC(rank=5, shift_budget=range(2), n_iter=10)
     model.fit(X_train)
 
     Y_test = model.M * O_test

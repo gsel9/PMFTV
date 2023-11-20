@@ -1,7 +1,8 @@
-from typing import cast
+# from typing import cast
 
 import numpy as np
 import tensorflow as tf
+from lmc.algorithms import utils
 
 # from matcomp.config import ModelConfig
 from numpy.lib.stride_tricks import as_strided
@@ -43,7 +44,7 @@ def _take_per_row_strided(A, start_idx, n_elem):
     Rows are not wrapped around, i.e. if start_idx + n_elem is larger than the
     number of columns, out of range is thrown.
 
-    In other words
+    That is
     >>> def simple_row_strided(A, shift_array, number_elements):
     >>>     strided_A = np.empty((A.shape[0], number_elements))
     >>>     for i in range(A.shape[0]):
@@ -62,7 +63,7 @@ def _take_per_row_strided(A, start_idx, n_elem):
     return out
 
 
-class SCMF(MatrixCompletionBase):
+class SCMC(MatrixCompletionBase):
     """Shifted matrix factorization with L2 and convolutional regularization (optional).
 
     Factor updates are based on gradient descent approximations, permitting an arbitrary
@@ -99,7 +100,7 @@ class SCMF(MatrixCompletionBase):
         lambda2=1.0,
         lambda3=1.0,
         random_state=42,
-        missing_value=None,
+        missing_value=0,
     ):
         super().__init__(
             rank=rank,
@@ -115,43 +116,47 @@ class SCMF(MatrixCompletionBase):
         self.s_budget = shift_budget
 
     def _init_matrices(self, X):
-        # The shift amount per row
+        self.N, self.T = np.shape(X)
+        # the shift amount per row
         self.s = np.zeros(self.N, dtype=int)
-        # The number of possible shifts. Used for padding of arrays.
+        # the number of possible shifts. used for padding of arrays
         self.Ns = len(self.s_budget)
 
-        # Add time points to cover extended left and right boundaries when shifting.
-        self.KD = tf.cast(
-            self.difference_matrix_getter(self.T + 2 * self.Ns), dtype=tf.float32
-        )
+        # add time points to cover extended left and right boundaries when shifting
+        K = utils.finite_difference_matrix(self.T + 2 * self.Ns)
+        D = utils.laplacian_kernel_matrix(self.T + 2 * self.Ns, self.gamma)
+        self.KD = K @ D
 
-        self.I1 = self.config.lambda1 * np.identity(self.config.rank)
-        self.I2 = self.config.lambda2 * np.identity(self.config.rank)
+        self.I1 = self.lambda1 * np.identity(self.r)
+        self.I2 = self.lambda2 * np.identity(self.r)
 
         # Expand matrices with zeros over the extended left and right boundaries.
         self.X_bc = np.hstack(
             [np.zeros((self.N, self.Ns)), X, np.zeros((self.N, self.Ns))]
         )
-        self.W_bc = np.hstack(
-            [np.zeros((self.N, self.Ns)), self.W, np.zeros((self.N, self.Ns))]
-        )
         V = self.init_basis()
         self.V_bc = np.vstack(
             [
-                np.zeros((self.Ns, self.config.rank)),
+                np.zeros((self.Ns, self.r)),
                 V,
-                np.zeros((self.Ns, self.config.rank)),
+                np.zeros((self.Ns, self.r)),
             ]
         )
-        # We know V_bc to be two-dimensional, so cast to please mypy.
-        J_shape = cast(tuple[int, int], self.V_bc.shape)
-        # TODO: do we have to cast this to tf float32?
-        self.J = self.config.minimal_value_matrix_getter(J_shape)
+        # the minimum value for the basic profiles
+        min_value = np.min(self.X[self.X != self.missing_value])
+        self.J = utils.basis_baseline_value(self.V_bc.shape, min_value)
 
         # Implementation shifts W and Y (not UV.T)
         self.X_shifted = self.X_bc.copy()
         self.W_shifted = self.W_bc.copy()
         self._fill_boundary_regions_V_bc()
+
+        if self.W is None:
+            self.W = self.identity_weights()
+
+        self.W_bc = np.hstack(
+            [np.zeros((self.N, self.Ns)), self.W, np.zeros((self.N, self.Ns))]
+        )
 
         # Placeholders (s x N x T) for all possible candidate shits
         self.X_shifts = np.empty((self.Ns, *self.X_bc.shape))
@@ -166,7 +171,6 @@ class SCMF(MatrixCompletionBase):
 
     @property
     def X(self):
-        # return self.X_bc[:, self.Ns:-self.Ns]
         return _take_per_row_strided(self.X_shifted, self.Ns - self.s, n_elem=self.T)
 
     @property
@@ -207,7 +211,6 @@ class SCMF(MatrixCompletionBase):
     def _update_V(self):
         V = tf.Variable(self.V_bc, dtype=tf.float32)
 
-        # @tf.function
         def _loss_V():
             frob_tensor = tf.multiply(
                 self.W_shifted, self.X_shifted - (self.U @ tf.transpose(V))
@@ -230,7 +233,6 @@ class SCMF(MatrixCompletionBase):
     def _exactly_solve_U(self):
         """Solve for U at a fixed V.
 
-        The internal U member is not modified by this method.
         V is assumed to be initialized."""
         U = np.empty((self.N, self.config.rank))
 
@@ -247,7 +249,6 @@ class SCMF(MatrixCompletionBase):
     def _approx_U(self):
         U = tf.Variable(self.U, dtype=tf.float32)
 
-        # @tf.function
         def _loss_U():
             frob_tensor = tf.multiply(
                 self.W_shifted,
@@ -289,7 +290,7 @@ class SCMF(MatrixCompletionBase):
         self.n_iter_ += 1
 
     def loss(self):
-        "Compute the loss from the optimization objective"
+        "Evaluate the optimization objective"
 
         loss = np.sum(
             np.linalg.norm(
@@ -297,8 +298,8 @@ class SCMF(MatrixCompletionBase):
             )
             ** 2
         )
-        loss += self.config.lambda1 * np.sum(np.linalg.norm(self.U, axis=1) ** 2)
-        loss += self.config.lambda2 * np.linalg.norm(self.V_bc) ** 2
-        loss += self.config.lambda3 * np.linalg.norm(self.KD @ self.V_bc) ** 2
+        loss += self.lambda1 * np.square(np.linalg.norm(self.U))
+        loss += self.lambda2 * np.square(np.linalg.norm(self.V_bc - self.J))
+        loss += self.lambda3 * np.square(np.linalg.norm(self.KD @ self.V_bc))
 
         return loss

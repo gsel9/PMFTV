@@ -1,13 +1,13 @@
 # third party
 import numpy as np
 import tensorflow as tf
-from longimc.algorithms import utils
+from lmc.algorithms import utils
 
 # local
 from ._base import MatrixCompletionBase
 
 
-class WCMF(MatrixCompletionBase):
+class WCMC(MatrixCompletionBase):
     """Matrix factorization with L2 and convolutional regularization.
     Factor updates are based on gradient descent approximations, permitting
     an arbitrary weight matrix in the discrepancy term.
