@@ -1,10 +1,8 @@
-# generic
-from abc import ABC, abstractmethod
+"""Base class for matrix completion algorithms.
+"""
+from abc import ABC
 
-# third party
 import numpy as np
-
-# local
 from longimc.algorithms.convergence import FactorCovergence
 
 
@@ -37,14 +35,14 @@ class MatrixCompletionBase(ABC):
         self.n_iter_ = None
         self.losses_ = None
 
-    @abstractmethod
     def _init_matrices(self, X):
-        ...
+        raise NotImplementedError("Should implement _init_matrices")
 
-    @abstractmethod
     def loss(self):
-        "Evaluate the optimization objective"
-        ...
+        raise NotImplementedError("Should implement loss")
+
+    def run_step(self):
+        raise NotImplementedError("Should implement run_step")
 
     def set_params(self, **parameters):
         for parameter, value in parameters.items():
@@ -75,10 +73,6 @@ class MatrixCompletionBase(ABC):
         # estimate least-squares coefficients from shared basic profiles
         U_star = (2 * X @ self.V) @ np.linalg.inv(self.V.T @ self.V)
         return U_star @ self.V.T
-
-    @abstractmethod
-    def run_step(self):
-        ...
 
     def fit(self, X, y=None, verbose=1):
         """Run matrix completion on input matrix X using a factorization model."""
