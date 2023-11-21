@@ -1,10 +1,8 @@
-# Controls when the workflow will run   
-name: Python application
+# Name of the GitHub Actions workflow 
+name: CI
 
-on:
-  push:
-    branches: [ "main" ]
-  pull_request:
+# Controls when the workflow will run   
+on: [push, pull_request]
 
 jobs:
   ci:
