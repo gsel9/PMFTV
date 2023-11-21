@@ -1,14 +1,10 @@
-# Name of the GitHub Actions workflow 
-name: CI
-
 # Controls when the workflow will run   
-on: [push, pull_request]
-  # Trigger the workflow only for push or PR to main 
-  # branch 
-  #push:
-  #  branches: [ main ]
-  #pull_request:
-  #  branches: [ main ]
+name: Python application
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
 
 jobs:
   ci:
