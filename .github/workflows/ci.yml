@@ -3,6 +3,12 @@ name: CI
 
 # Controls when the workflow will run   
 on: [push, pull_request]
+# - will only run if pushed to main or on PR 
+# on:
+#  push:
+#    branches: [ "main" ]
+#  pull_request:
+
 
 jobs:
   ci:
