@@ -38,13 +38,15 @@ score = mean_squared_error(X_test, Y_test)
 
 # About
 
-This Python library that adds support for low-rank matrix completion of longitudinal data. The implementations are based on models proposed in [1], [2] and [3].
+This Python library that adds support for low-rank matrix completion of longitudinal data. The implementations are based on models proposed in [1], [2] and [3]. 
 
-**A low-rank matrix factorization model for completing longitudinal data**: 
-A partially observed data matrix $X \in \mathbb{R}^{N \times T}$. Each row $1 \leq n \leq N$ of $X$ is assumed to be a partially observed longitudinal profile. Assumptions:
+**Data**: Here the data is assumed to be a partially observed data matrix $X \in \mathbb{R}^{N \times T}$. Each row $1 \leq n \leq N$ of $X$ is assumed to be a partially observed longitudinal profile
+
+**A low-rank matrix factorization model for completing longitudinal data**: The basic model for the data is that the matrix $X$ can be decomposed into a a set of shared basic profiles $\mathbf{v}_1, \dots, \mathbf{v}_r$ with
+$r \ll \min \{N,T\}$. in $V$ and profile-specific coefficients in $U$.
+
 * The observed entries $(n, t) \in \Omega$ of $X$ are possibly inaccurate measurements of a continuous \emph{latent state} $M_{n,t}$ that evolves slowly over time.
-* Furthermore, we assume that each latent profile is a linear combination of a small number of *basic profiles* $\mathbf{v}_1, \dots, \mathbf{v}_r$ with
-$r \ll \min \{N,T\}$.
+* Furthermore, we assume that each latent profile is a linear combination of a small number of *basic profiles* 
 
 Then the matrix $\textbf{M}$ of all such profiles can be approximately decomposed as $\textbf{M} \approx \mathbf{U}\mathbf{V}^\top$ with $\mathbf{V} \in \mathbb{R}^{T \times r}$ being the collection of basic profiles
 and $\mathbf{U} \in \mathbb{R}^{N\times r}$ being the row-specific coefficients. TODO: Figure \ref{fig:factoring} illustrates the latent state %risk 
@@ -61,6 +63,10 @@ The optimization algorithm is based on alternating minimization.
 **Models**:
 
 Specific implementations are listed in the following.
+
+## Matrix completion for longitudinal data
+
+Assuem temporal smoothness and impose a constraint on the time-varying basic profiles $V$ via the regualrizationerm $|| RV ||_F^2$. Here $R$ is a forward finite-difference matrix. 
 
 ## Convolutional matrix completion (CMC) 
 
