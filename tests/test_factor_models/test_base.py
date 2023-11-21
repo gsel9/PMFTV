@@ -1,11 +1,12 @@
-"""Test base functionality of factor models."""
+"""Test functionality of factor base model."""
 import unittest
+from unittest.mock import MagicMock
 
 import numpy as np
 import pytest
 from hypothesis import given, strategies
-from hypothesis.extra.numpy import array_shapes, arrays
-from longimc import MatrixCompletionBase
+from hypothesis.extra import numpy as nps
+from lmc import MatrixCompletionBase
 
 
 class TestMatrixCompletionBase(unittest.TestCase):
@@ -64,9 +65,9 @@ class TestMatrixCompletionBase(unittest.TestCase):
         """Given an array with not missing, the weight matrix
         entries should all all equal one."""
         array = data.draw(
-            arrays(
+            nps.arrays(
                 float,
-                array_shapes(min_dims=2, max_dims=2),
+                nps.array_shapes(min_dims=2, max_dims=2),
                 elements=strategies.floats(1, 4),
             )
         )
@@ -97,15 +98,28 @@ class TestMatrixCompletionBase(unittest.TestCase):
 
         assert np.shape(model.init_coefs()) == (N, rank)
 
-    # TODO: need V, X. check that model.transform() output
-    # has expected shape (N x T)
-    def test_transform(self, V, X):
+    @given(
+        strategies.integers(min_value=10, max_value=100),
+        strategies.integers(min_value=10, max_value=100),
+        strategies.integers(min_value=10, max_value=100),
+    )
+    def test_transform(self, N, T, rank):
         "Test output from model.transform() has expected shape (N x T)."
+
+        X = np.random.random((N, T))
+        V = np.random.random((T, rank))
         model = MatrixCompletionBase(rank=None)
         model.set_params(**{"V": V})
 
         assert np.shape(model.transform(X)) == np.shape(X)
 
-    # TODO: mocking
     def test_fit(self):
-        pass
+        model = MatrixCompletionBase(n_iter=10, rank=None, early_stopping=False)
+        # mock these calls
+        model.loss = MagicMock(return_value=2)
+        model.run_step = MagicMock(return_value=None)
+        model._init_matrices = MagicMock(return_value=None)
+
+        model.fit(None)
+
+        assert model.n_iter == model.n_iter_
