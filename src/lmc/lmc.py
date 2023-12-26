@@ -1,10 +1,10 @@
 import numpy as np
-from lmc.algorithms import utils
+from lmc import utils
 
 from ._base import MatrixCompletionBase
 
 
-class CMC(MatrixCompletionBase):
+class LMC(MatrixCompletionBase):
     r"""Matrix factorization with L2 and convolutional regularization.
     Factor updates are based on analytical estimates and will therefore
     not permit and arbitrary weight matrix in the discrepancy term. Here is
@@ -55,13 +55,11 @@ class CMC(MatrixCompletionBase):
         self.V = self.init_basis()
         self.U = self.init_coefs()
 
-        K = utils.finite_difference_matrix(self.T)
-        D = utils.laplacian_kernel_matrix(self.T, self.gamma)
+        self.D = utils.finite_difference_matrix(self.T)
 
         # pre-compute static variables
-        self.KD = K @ D
-        self.DTKTKD = self.KD.T @ self.KD
-        self.L2, self.Q2 = np.linalg.eigh(self.lambda3 * self.DTKTKD)
+        self.DTD = self.D.T @ self.D
+        self.L2, self.Q2 = np.linalg.eigh(self.lambda3 * self.DTD)
 
         # the minimum value for the basic profiles
         min_value = np.min(self.X[self.X != self.missing_value])
@@ -98,7 +96,7 @@ class CMC(MatrixCompletionBase):
         loss = np.square(np.linalg.norm(self.mask * (self.X - self.U @ self.V.T)))
         loss += self.lambda1 * np.square(np.linalg.norm(self.U))
         loss += self.lambda2 * np.square(np.linalg.norm(self.V - self.J))
-        loss += self.lambda3 * np.square(np.linalg.norm(self.KD @ self.V))
+        loss += self.lambda3 * np.square(np.linalg.norm(self.D @ self.V))
 
         return loss
 
