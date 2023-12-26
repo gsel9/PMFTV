@@ -1,9 +1,11 @@
+[Installation](#Installation) | [Usage](#Usage) | [About](#About) | [Examples](#Examples) | [License](#License) | [References](#References) 
+
 # LMC - Low-rank matrix completion for longitudinal data
 
 ![GitHub CI](https://github.com/gsel9/dgufs/actions/workflows/ci.yml/badge.svg)
 ![GitHub CI](https://img.shields.io/badge/code%20style-black-000000.svg)
 
-Fill in the missing entries of a partially observed time-varying data matrix. 
+[Matrix completion](https://en.wikipedia.org/wiki/Matrix_completion) is about fill in the missing entries of a matrix. An example of such a matrix is from the [Netflix Prize](https://en.wikipedia.org/wiki/Netflix_Prize) where the movie ratings from each used was organised as scarce vectors fitted into a matrix. If the data is longitudinal, the goal is to fill in the missing entries of a matrix where the columns represents time stamps.
 
 # Installation
 
@@ -13,7 +15,7 @@ To install `lmc`, you can run
 python -m pip install lmc
 ```
 
-# Quick start example 
+# Usage_ 
 
 ```python
 # local
@@ -38,13 +40,11 @@ score = mean_squared_error(X_test, Y_test)
 
 # About
 
-This Python library that adds support for low-rank matrix completion of longitudinal data. The implementations are based on models proposed in [1], [2] and [3]. 
+This Python library that adds support for low-rank matrix completion of longitudinal data. Algorithms based on [1], [2] and [3] are implemented as functionality for longitudinal matrix completion. 
 
-[Matrix completion](https://en.wikipedia.org/wiki/Matrix_completion) is about fill in the missing entries of a matrix. An example of such a matrix is from the [Netflix Prize](https://en.wikipedia.org/wiki/Netflix_Prize) where the movie ratings from each used was organised as scarce vectors fitted into a matrix. If the data is longitudinal, the goal is to fill in the missing entries of a matrix where the columns represents time stamps.
+**Data**: The data is assumed to be a partially observed data matrix $X \in \mathbb{R}^{N \times T}$. Each row $1 \leq n \leq N$ of $X$ is assumed to be a partially observed longitudinal profile
 
-**Data**: Here the data is assumed to be a partially observed data matrix $X \in \mathbb{R}^{N \times T}$. Each row $1 \leq n \leq N$ of $X$ is assumed to be a partially observed longitudinal profile
-
-**A low-rank matrix factorization model for completing longitudinal data**: The basic model for the data is that the matrix $X$ can be decomposed into a a set of shared basic profiles $\mathbf{v}_1, \dots, \mathbf{v}_r$ with
+**The low-rank matrix factorization model**: The basic model for the data is that the matrix $X$ can be decomposed into a a set of shared basic profiles $\mathbf{v}_1, \dots, \mathbf{v}_r$ with
 $r \ll \min \{N,T\}$. in $V$ and profile-specific coefficients in $U$.
 
 * The observed entries $(n, t) \in \Omega$ of $X$ are possibly inaccurate measurements of a continuous \emph{latent state} $M_{n,t}$ that evolves slowly over time.
@@ -54,15 +54,15 @@ Then the matrix $\textbf{M}$ of all such profiles can be approximately decompose
 and $\mathbf{U} \in \mathbb{R}^{N\times r}$ being the row-specific coefficients. TODO: Figure \ref{fig:factoring} illustrates the latent state %risk 
 model. 
 
+**Optimization**:
+
 The general objective is on the form
 $$\min_{\substack{\mathbf{U}, \mathbf{V}}} F(\mathbf{U}, \mathbf{V}) + R(\mathbf{U}, \mathbf{V})$$
 The term $F$ denotes a convex data discrepancy term and $R$ is a possibly non-smooth or possibly non-convex regularization term. 
 
-**Optimization**:
-
 The optimization algorithm is based on alternating minimization.
 
-**Models**:
+**Matrix completion models**:
 
 Specific implementations are listed in the following.
 
@@ -134,8 +134,11 @@ MAP predict, CMC
 
 DGD profiles, SCMC
 
-References
-----------
+# License 
+
+`lmc` was created by Severin Elvatun. It is licensed under the terms of the MIT license.
+
+# References
 
 * [1]: Langberg, Geir Severin RE, et al. "Matrix factorization for the reconstruction of cervical cancer screening histories and prediction of future screening results." BMC bioinformatics 23.12 (2022): 1-15.
 * [2]: Langberg, Geir Severin RE, et al. "Towards a data-driven system for personalized cervical cancer risk stratification." Scientific Reports 12.1 (2022): 12083.
