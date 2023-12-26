@@ -1,5 +1,8 @@
 # LMC - Low-rank matrix completion for longitudinal data
 
+![GitHub CI](https://github.com/gsel9/dgufs/actions/workflows/ci.yml/badge.svg)
+![GitHub CI](https://img.shields.io/badge/code%20style-black-000000.svg)
+
 Fill in the missing entries of a partially observed time-varying data matrix. 
 
 # Installation
