@@ -99,7 +99,13 @@ def discretise_matrix(M, number_of_states: int, theta, seed=42):
 
 
 def synthetic_data_generator(
-    n_rows, n_timesteps, rank=5, number_of_states=4, seed=42, theta=2.5
+    n_rows,
+    n_timesteps,
+    rank=5,
+    number_of_states=4,
+    seed=42,
+    theta=2.5,
+    sparsity_level=6,
 ):
     M = float_matrix(
         N=n_rows, T=n_timesteps, r=rank, number_of_states=number_of_states, seed=seed
@@ -107,7 +113,6 @@ def synthetic_data_generator(
     Y = discretise_matrix(M, number_of_states=number_of_states, theta=theta, seed=seed)
 
     observation_probabilities = [0.01, 0.03, 0.08, 0.12, 0.04]
-    sparsity_level = 6
     memory_length = 5
 
     mask = simulate_mask(

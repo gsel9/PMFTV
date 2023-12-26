@@ -3,23 +3,27 @@ Simple example
 """
 
 # local
-from lmc import CMC
+from lmc import CMC, LMC
 from plotting import plot_profiles_and_observations
 
 # third party
-from sklearn.metrics import mean_squared_error
 from synthetic_data import synthetic_data_generator
 
 
 def main():
     rank = 5
+    n_iter = 500
+    # large coefficient to emphasize regularisation effect
+    lambda3 = 1
 
-    M, X = synthetic_data_generator(n_rows=100, n_timesteps=350, rank=rank)
+    M, X = synthetic_data_generator(
+        n_rows=10, n_timesteps=350, rank=rank, sparsity_level=1
+    )
 
     plot_profiles_and_observations(X, M, path_to_fig="./figures/ground_truth_data.pdf")
-    # assert afs
+
     # factorization with convolution
-    mfc_model = CMC(rank=rank, n_iter=200)
+    mfc_model = CMC(rank=rank, n_iter=n_iter, lambda1=0.5, lambda2=0.5, lambda3=lambda3)
     mfc_model.fit(X)
 
     plot_profiles_and_observations(
@@ -27,13 +31,12 @@ def main():
     )
 
     # factorization without convolution
-    mf_model = CMC(rank=rank, n_iter=200, lambda3=0.0)
-    mf_model.fit(X)
+    lmf_model = LMC(rank=rank, n_iter=n_iter, lambda1=0.5, lambda2=0.5, lambda3=lambda3)
+    lmf_model.fit(X)
 
-    plot_profiles_and_observations(X, mf_model.M, path_to_fig="./figures/mf_model.pdf")
-
-    print("With convolution:", mean_squared_error(M, mfc_model.M))
-    print("Without convolution:", mean_squared_error(M, mf_model.M))
+    plot_profiles_and_observations(
+        X, lmf_model.M, path_to_fig="./figures/lmc_model.pdf"
+    )
 
 
 if __name__ == "__main__":

@@ -1,9 +1,9 @@
-from .algorithms import (
-    CMC, SCMC, WCMC, TVMC, LarsMC, MatrixCompletionBase
-)
+from .algorithms import CMC, LMC, SCMC, TVMC, WCMC, LarsMC, MatrixCompletionBase
+
 # from .util import model_factory, _and_log
 
 __all__ = [
+    "LMC",
     "CMC",
     "SCMC",
     "WCMC",
