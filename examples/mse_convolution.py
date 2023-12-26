@@ -32,7 +32,7 @@ def plot_rec_mse(
         axis,
         fig,
         arrowed_spines=True,
-        xlim=(min(x_coords) - 0.01, max(x_coords) + 0.01),
+        xlim=(min(x_coords) - 0.05, max(x_coords) + 0.05),
         xlabel="Data density level",
         ylabel="Reconstruction error",
     )
@@ -55,13 +55,13 @@ def plot_rec_mse(
 
 
 def main():
-    rank = 4
-    n_iter = 500
+    rank = 5
+    n_iter = 1000
 
     # higher value to emphasize impact of regularization
-    lambda3 = 10
+    lambda3 = 1000
 
-    sparsity_levels = [0.2, 0.5, 1, 1.5, 2, 3, 4]
+    sparsity_levels = [0.2, 0.5, 1, 2, 4, 7]
 
     rnd = np.random.RandomState(seed=42)
     seeds = rnd.choice(range(1000), size=5, replace=False)
@@ -71,8 +71,8 @@ def main():
         _cmc_scores, _lmc_scores = [], []
         for seed in seeds:
             M, X = synthetic_data_generator(
-                n_rows=1000,
-                n_timesteps=350,
+                n_rows=2000,
+                n_timesteps=300,
                 rank=rank,
                 sparsity_level=sparsity_level,
                 seed=seed,

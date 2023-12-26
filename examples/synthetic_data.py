@@ -42,10 +42,9 @@ def float_matrix(N, T, r, number_of_states: int, seed=42):
 
     U = rnd.gamma(shape=1, scale=1, size=(N, r))
 
-    from plotting import plot_basic_profiles, plot_coefficients
-
-    plot_basic_profiles(V, "./figures/V.pdf")
-    plot_coefficients(U, "./figures/U.pdf")
+    # from plotting import plot_basic_profiles, plot_coefficients
+    # plot_basic_profiles(V, "./figures/V.pdf")
+    # plot_coefficients(U, "./figures/U.pdf")
 
     return _scale_to_domain(U @ V.T, 1, number_of_states)
 
