@@ -15,7 +15,7 @@ To install `lmc`, you can run
 python -m pip install lmc
 ```
 
-# Usage_ 
+# Usage
 
 ```python
 # local
