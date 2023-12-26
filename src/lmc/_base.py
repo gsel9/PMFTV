@@ -3,7 +3,7 @@
 from abc import ABC
 
 import numpy as np
-from lmc.algorithms.convergence import FactorCovergence
+from lmc.convergence import FactorCovergence
 
 
 class MatrixCompletionBase(ABC):

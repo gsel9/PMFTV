@@ -5,12 +5,24 @@ from utils import format_axis, set_fig_size
 STATE_COLORS = {1: "lightgreen", 2: "lightblue", 3: "salmon", 4: "maroon"}
 
 
-def plot_basic_profiles():
-    return
+def plot_basic_profiles(V, path_to_fig=None):
+    fig, axis = plt.subplots(1, 1, figsize=set_fig_size(435, fraction=0.9))
+    axis.plot(V)
+
+    if path_to_fig is not None:
+        fig.savefig(path_to_fig, transparent=True, bbox_inches="tight")
+
+    return fig, axis
 
 
-def plot_coefficients():
-    return
+def plot_coefficients(U, path_to_fig=None):
+    fig, axis = plt.subplots(1, 1, figsize=set_fig_size(435, fraction=0.9))
+    axis.hist(U.ravel(), bins="auto")
+
+    if path_to_fig is not None:
+        fig.savefig(path_to_fig, transparent=True, bbox_inches="tight")
+
+    return fig, axis
 
 
 def plot_profile(m, axis, label=None):

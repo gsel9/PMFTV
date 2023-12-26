@@ -1,6 +1,5 @@
-from .algorithms import CMC, LMC, SCMC, TVMC, WCMC, LarsMC, MatrixCompletionBase
-
-# from .util import model_factory, _and_log
+from .cmc import CMC
+from .lmc import LMC
 
 __all__ = [
     "LMC",
