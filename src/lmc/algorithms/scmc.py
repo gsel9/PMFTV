@@ -22,14 +22,11 @@ def _custom_roll(arr, m):
     NB! For very large shifts, floating point errors may cause the wrong results.
     """
 
-    # NOTE: Should do copy here
-    # Thorvald (19.09.22): Why?
-    arr_roll = arr[:, [*range(arr.shape[1]), *range(arr.shape[1] - 1)]]  # .copy()
+    arr_roll = arr[:, [*range(arr.shape[1]), *range(arr.shape[1] - 1)]]
     strd_0, strd_1 = arr_roll.strides
     n = arr.shape[1]
-    # Set as_strided to writable=False to avoid accidentally writing to the memory
-    # thus corrupting the data.
-    # Setting this is also recommended in the documentation.
+    # config as_strided with writable=False to avoid accidentally writing to the
+    # memory and corrupting the data (recommended in docs)
     result = as_strided(
         arr_roll, (*arr.shape, n), (strd_0, strd_1, strd_1), writeable=False
     )

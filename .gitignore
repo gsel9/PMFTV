@@ -159,6 +159,7 @@ workspace/
 
 # mac-specific
 .DS_Store
+./tests/.DS_Store
 
 # results
 .hypothesis/
