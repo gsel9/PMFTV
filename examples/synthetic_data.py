@@ -33,18 +33,21 @@ def float_matrix(N, T, r, number_of_states: int, seed=42):
 
     rnd = np.random.default_rng(seed=seed)
 
-    centre_min, centre_max = 70, 170
+    centre_min, centre_max = 50, 300
     centers = np.linspace(centre_min, centre_max, r)
     x = np.linspace(0, T, T)
 
-    k, theta = 3.0, 5e-5
+    k, theta = 3.0, 5e-4
     V = 1 + k * np.exp(-theta * (x[:, None] - centers) ** 2)
 
-    U = rnd.gamma(shape=1.0, scale=1.0, size=(N, r))
+    U = rnd.gamma(shape=1, scale=1, size=(N, r))
 
-    M = U @ V.T
+    from plotting import plot_basic_profiles, plot_coefficients
 
-    return _scale_to_domain(M, 1, number_of_states)
+    plot_basic_profiles(V, "./figures/V.pdf")
+    plot_coefficients(U, "./figures/U.pdf")
+
+    return _scale_to_domain(U @ V.T, 1, number_of_states)
 
 
 def simulate_mask(D, observation_proba, memory_length, level, seed=42):

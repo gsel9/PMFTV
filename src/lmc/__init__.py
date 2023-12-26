@@ -1,4 +1,5 @@
-from cmc import CMC
+from .cmc import CMC
+from .lmc import LMC
 
 __all__ = [
     "LMC",
