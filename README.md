@@ -1,9 +1,6 @@
 # LMC - Low-rank matrix completion for longitudinal data
 
-**TBC**
-
-# TODO:
-* Make an example plotting basic profiles and coefficients for different regularisations 
+Fill in the missing entries of a partially observed time-varying data matrix. 
 
 # Installation
 
@@ -40,6 +37,8 @@ score = mean_squared_error(X_test, Y_test)
 
 This Python library that adds support for low-rank matrix completion of longitudinal data. The implementations are based on models proposed in [1], [2] and [3]. 
 
+[Matrix completion](https://en.wikipedia.org/wiki/Matrix_completion) is about fill in the missing entries of a matrix. An example of such a matrix is from the [Netflix Prize](https://en.wikipedia.org/wiki/Netflix_Prize) where the movie ratings from each used was organised as scarce vectors fitted into a matrix. If the data is longitudinal, the goal is to fill in the missing entries of a matrix where the columns represents time stamps.
+
 **Data**: Here the data is assumed to be a partially observed data matrix $X \in \mathbb{R}^{N \times T}$. Each row $1 \leq n \leq N$ of $X$ is assumed to be a partially observed longitudinal profile
 
 **A low-rank matrix factorization model for completing longitudinal data**: The basic model for the data is that the matrix $X$ can be decomposed into a a set of shared basic profiles $\mathbf{v}_1, \dots, \mathbf{v}_r$ with
@@ -64,7 +63,7 @@ The optimization algorithm is based on alternating minimization.
 
 Specific implementations are listed in the following.
 
-## Matrix completion for longitudinal data
+## Longitudinal matrix completion (LMC) 
 
 Assuem temporal smoothness and impose a constraint on the time-varying basic profiles $V$ via the regualrizationerm $|| RV ||_F^2$. Here $R$ is a forward finite-difference matrix. 
 
