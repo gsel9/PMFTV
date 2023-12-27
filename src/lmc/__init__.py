@@ -1,17 +1,17 @@
-from .cmc import CMC
-from .lmc import LMC
-from .wcmc import WCMC, WCMCADMM
+from .factor_models._base import MatrixCompletionBase
+from .factor_models.cmc import CMC
+from .factor_models.larsmc import LarsMC
+from .factor_models.lmc import LMC
+from .factor_models.tvmc import TVMC
+from .factor_models.wcmc import WCMC, WCMCADMM
 
 __all__ = [
     "LMC",
     "CMC",
-    "SCMC",
+    # "SCMC",
     "WCMC",
     "WCMCADMM",
     "TVMC",
     "LarsMC",
     "MatrixCompletionBase",
-    "reconstruction_mse",
-    "model_factory",
-    "train_and_log",
 ]
