@@ -61,17 +61,17 @@ def main():
     # higher value to emphasize impact of regularization
     lambda3 = 1000
 
-    sparsity_levels = [0.2, 0.5, 1, 2, 4, 7]
+    sparsity_levels = [0.5, 1, 1.5, 2, 4, 8]
 
     rnd = np.random.RandomState(seed=42)
-    seeds = rnd.choice(range(1000), size=5, replace=False)
+    seeds = rnd.choice(range(1000), size=10, replace=False)
 
     cmc_scores, lmc_scores = [], []
     for sparsity_level in sparsity_levels:
         _cmc_scores, _lmc_scores = [], []
         for seed in seeds:
             M, X = synthetic_data_generator(
-                n_rows=2000,
+                n_rows=5000,
                 n_timesteps=300,
                 rank=rank,
                 sparsity_level=sparsity_level,

@@ -1,4 +1,29 @@
+# generic
+import glob
+import re
+
+# third party
 import numpy as np
+from PIL import Image
+
+
+def make_gif(filename, frame_dir):
+    frames = [
+        Image.open(image)
+        for image in sorted(
+            glob.glob(f"{frame_dir}/*.jpg"),
+            key=lambda x: float(re.findall(r"(\d+)", x)[0]),
+        )
+    ]
+    frame_one = frames[0]
+    frame_one.save(
+        filename,
+        format="GIF",
+        append_images=frames,
+        save_all=True,
+        duration=300,
+        loop=0,
+    )
 
 
 def set_fig_size(width=None, fraction=1, subplots=(1, 1)):
