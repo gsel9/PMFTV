@@ -1,7 +1,6 @@
 """
 Simple example
 """
-
 # third party
 import matplotlib.pyplot as plt
 
@@ -9,7 +8,7 @@ import matplotlib.pyplot as plt
 from lmc.utils import finite_difference_matrix, laplacian_kernel_matrix
 
 # from plotting import plot_profiles_and_observations
-from utils import format_axis, set_fig_size
+from utils import format_axis, make_gif, set_fig_size
 
 
 def plot_regularisation(
@@ -47,28 +46,27 @@ def plot_regularisation(
     return fig, axis
 
 
-def plot_regularisation_series(
-    reg_profiles, nrows=None, ncols=None, axis_label=None, path_to_fig=None
-):
-    fig, axes = plt.subplots(nrows, ncols, figsize=set_fig_size(435, fraction=1.1))
-
-    for n, axis in enumerate(axes.ravel()):
-        axis.plot(reg_profiles[n], label=axis_label, marker="o", linestyle="-")
+def plot_regularisation_series(reg_profiles, axis_label=None, path_to_dir=None):
+    for n, reg_profile in enumerate(reg_profiles):
+        fig, axis = plt.subplots(1, 1, figsize=set_fig_size(435, fraction=0.9))
+        axis.plot(reg_profile, label=axis_label, marker="o", linestyle="-")
 
         format_axis(
             axis,
             fig,
             arrowed_spines=True,
             ylim=(-1.05, 1.05),
-            xlim=(0, len(reg_profiles[n])),
+            xlim=(0, len(reg_profile)),
             xlabel="Time points",
             ylabel="Penalization",
         )
 
-    fig.tight_layout()
+        fig.tight_layout()
 
-    if path_to_fig is not None:
-        fig.savefig(path_to_fig, transparent=True, bbox_inches="tight")
+        if path_to_dir is not None:
+            fig.savefig(
+                f"{path_to_dir}/frame{n}.jpg", transparent=True, bbox_inches="tight"
+            )
 
     return fig, axis
 
@@ -78,29 +76,28 @@ def main():
     K = finite_difference_matrix(n_timepoints)
     D = laplacian_kernel_matrix(n_timepoints)
     R = K @ D
-    fig, axis = plot_regularisation(K[4], axis_label="LMC")
-    plot_regularisation(
-        R[4],
-        fig=fig,
-        axis=axis,
-        axis_label="CMC",
-        path_to_fig="./figures/effect_conv.pdf",
-    )
+    # fig, axis = plot_regularisation(K[4], axis_label="LMC")
+    # plot_regularisation(
+    #    R[4],
+    #    fig=fig,
+    #    axis=axis,
+    #    axis_label="CMC",
+    #    path_to_fig="./figures/effect_conv.pdf",
+    # )
 
-    n_timepoints = 10
+    n_timepoints = 20
     K = finite_difference_matrix(n_timepoints)
     D = laplacian_kernel_matrix(n_timepoints)
     R = K @ D
+
     plot_regularisation_series(
         K,
-        nrows=3,
-        ncols=3,
-        axis_label="LMC",
-        path_to_fig="./figures/non_conv_series.pdf",
+        path_to_dir="./figures/reg",
     )
-    plot_regularisation_series(
-        R, nrows=3, ncols=3, axis_label="LMC", path_to_fig="./figures/conv_series.pdf"
-    )
+    make_gif("./figures/reg/reg.gif", "./figures/reg")
+
+    plot_regularisation_series(R, path_to_dir="./figures/convreg")
+    make_gif("./figures/convreg/convreg.gif", "./figures/convreg")
 
 
 if __name__ == "__main__":
