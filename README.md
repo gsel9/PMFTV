@@ -1,9 +1,12 @@
 [Installation](#Installation) | [Usage](#Usage) | [About](#About) | [Examples](#Examples) | [License](#License) | [References](#References) 
 
-# LMC - Low-rank matrix completion for longitudinal data
+# LMC 
+Low-rank matrix completion for longitudinal data with various regularizations.
 
 ![GitHub CI](https://github.com/gsel9/dgufs/actions/workflows/ci.yml/badge.svg)
 ![GitHub CI](https://img.shields.io/badge/code%20style-black-000000.svg)
+
+---
 
 [Matrix completion](https://en.wikipedia.org/wiki/Matrix_completion) is about fill in the entries of a scarce matrix. An example of such a matrix is from the [Netflix Prize](https://en.wikipedia.org/wiki/Netflix_Prize), where the rating scores from each user for a small number of movies are organised as scarce vectors fitted into a matrix. 
 
