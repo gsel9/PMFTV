@@ -1,7 +1,7 @@
 [Installation](#Installation) | [Usage](#Usage) | [About](#About) | [Examples](#Examples) | [License](#License) | [References](#References) 
 
 # LMC 
-Low-rank matrix completion for longitudinal data with various regularizations.
+Low-rank matrix completion for longitudinal data with various discrepancy terms and regularizations.
 
 ![GitHub CI](https://github.com/gsel9/dgufs/actions/workflows/ci.yml/badge.svg)
 ![GitHub CI](https://img.shields.io/badge/code%20style-black-000000.svg)
