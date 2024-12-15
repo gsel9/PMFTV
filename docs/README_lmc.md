@@ -10,4 +10,4 @@ $$
 \end{align}
 $$
 
-Here, $\| \cdot \|_F$ denotes the Frobenius norm. In the discrepancy term, $P_{\Omega}$ is the projection onto the obsered entries in $X$. The regularization $|| U ||_F^2 + || V ||_F^2$ controls overfitting, and $|| RV ||_F^2$ impose temporal smoothness on the time-varying basic profiles $V$ by penalizing rapid changes in the profiles uniformly in time. Here $R$ is a forward finite-difference matrix.
+Here, $| \cdot | _F^2$ denotes the Frobenius norm. In the discrepancy term, $P_{\Omega}$ is the projection onto the obsered entries in $X$. The regularization $| U |_F^2 + | V |_F^2$ controls overfitting, and $| RV |_F^2$ impose temporal smoothness on the time-varying basic profiles $V$ by penalizing rapid changes in the profiles uniformly in time. Here $R$ is a forward finite-difference matrix.
