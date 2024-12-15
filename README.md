@@ -1,28 +1,21 @@
 [Installation](#Installation) | [Usage](#Usage) | [About](#About) | [Examples](#Examples) | [License](#License) | [References](#References)
 
-# LMC: Low-rank matrix completion for longitudinal data
+# LMC
 
 ![GitHub CI](https://github.com/gsel9/dgufs/actions/workflows/ci.yml/badge.svg)
 ![GitHub CI](https://img.shields.io/badge/code%20style-black-000000.svg)
 
 ## About
 
-Low-rank matrix completion (LMC) is a technique used to recover a partially observed matrix by exploiting the assumption that the matrix has a low-rank structure. In LMC for longitudinal data, the data was collected over time, potentially at irregular intervals.
+This library offers a suite of techniques for low-rank matrix completion of longitudinal data. These techniques introduces various regularization and descrepancy terms to impose structural information on the completed matrix. 
 
-In this context, the matrix can be represented with rows corresponding to entities, and columns corresponding to the time points. Each entry in the matrix would represent an observation for a particular entity at a particular time. Low-rank matrix completion aims to recover the missing entries by exploiting the assumption that the matrix, when viewed as time-dependent for each entity, can be approximated by a low-rank matrix.
+### Low-rank matrix completion for longitudinal data
 
-The key idea is that, even though there might be missing values, the relationships or patterns in the data across individuals and time points can be captured by a low-rank approximation. This allows for imputation of missing values based on the observed data, by learning both entity-specific and time-dependent trends in the data.
+Low-rank matrix completion (LMC) is a technique used to recover a partially observed matrix by exploiting the assumption that the matrix has a low-rank structure. In LMC for longitudinal data, the data was collected over time, potentially at irregular intervals. 
 
-**Data**: The data is assumed to be organized as a partially observed data matrix $X \in \mathbb{R}^{N \times T}$. Each row $1 \leq n \leq N$ of $X$ is a partially observed profile of longitudinal measurements. Each column $1 \leq t \leq T$ of $X$ represents a unit of time. Assuming the profiles in $X$ are correlated, this matrix can be approximately low rank.
+In this context, the data can be organized as a partially observed matrix $\mathbf{X} \in \mathbb{R}^{N \times T}$, with $N$ rows corresponding to time-varying entities, and $T$ columns corresponding to the time points. Each entry $X_{n, t}$ would represent an observation for a particular entity $n$ at a particular time $t$. 
 
-**Low-rank factorization model**: The basic factorization model for the data is that the matrix $X$ can be decomposed into a set of shared time-varying basic profiles $\mathbf{v}_1, \dots, \mathbf{v}_r$ with
-$r \ll \min (\{N,T\})$ and profile-specific coefficients in $U_n$. The linear combination $M_n = U_nV^\top$ of coefficients and basic profiles yields the estimate for the reconstructed data profile. Assuming the profiles in $X$ are correlated, the matrix $\textbf{M}$ of all such profiles can be approximately decomposed as $\textbf{M} \approx \mathbf{U}\mathbf{V}^\top$ with $\mathbf{V} \in \mathbb{R}^{T \times r}$ being the collection of basic profiles and $\mathbf{U} \in \mathbb{R}^{N\times r}$ being the profile-specific coefficients. The task is thus to estimate $U$ and $V$ from $X$.
-
-**Optimization**:
-
-The general objective to estimate $U$ and $V$ from $X$ is on the form
-$$\min_{\substack{\mathbf{U}, \mathbf{V}}} F(\mathbf{U}, \mathbf{V}) + R(\mathbf{U}, \mathbf{V})$$
-The various optimization algorithms are based on alternating minimization. Here, $F$ is a data discrepancy term and $R$ is regularization used to impose specific structures on the result. Depending on the expected structure of $M$, various constraints may be imposed. The specific implementations are listed in the following.
+Low-rank matrix completion aims to recover the missing entries by exploiting the assumption that the matrix, when viewed as time-dependent for each entity, can be approximated by a low-rank matrix. The basic factorization model decomposes $\mathbf{X}$ into a set of shared time-varying basic profiles $\mathbf{v}_1, \dots, \mathbf{v}_r$, where $r \ll \min (\{N,T\})$, and profile-specific coefficients in $\mathbf{U}_n$. The linear combination $\mathbf{M}_n = \mathbf{U}_n \mathbf{V}^\top$ of coefficients and basic profiles yields the estimate for the reconstructed profile. 
 
 ## Key features
 
