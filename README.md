@@ -1,25 +1,29 @@
 [Installation](#Installation) | [Usage](#Usage) | [About](#About) | [Examples](#Examples) | [License](#License) | [References](#References) 
 
-# LMC 
-Low-rank matrix completion for longitudinal data with various discrepancy terms and regularizations.
+# LMC: Low-rank matrix completion for longitudinal data
 
 ![GitHub CI](https://github.com/gsel9/dgufs/actions/workflows/ci.yml/badge.svg)
 ![GitHub CI](https://img.shields.io/badge/code%20style-black-000000.svg)
 
----
+## About
 
-[Matrix completion](https://en.wikipedia.org/wiki/Matrix_completion) is about fill in the entries of a scarce matrix. An example of such a matrix is from the [Netflix Prize](https://en.wikipedia.org/wiki/Netflix_Prize), where the rating scores from each user for a small number of movies are organised as scarce vectors fitted into a matrix. 
+Low-rank matrix completion (LMC) is a technique used to recover a partially observed matrix by exploiting the assumption that the matrix has a low-rank structure. In LMC for longitudinal data, the data was collected over time, potentially at irregular intervals. 
 
-A more invovled example is when the columns of the data matrix expose partially observed temporal relationship between measurements. 
-This Python library that adds support for low-rank matrix completion of such longitudinal data.
+In this context, the matrix can be represented with rows corresponding to entities, and columns corresponding to the time points. Each entry in the matrix would represent an observation for a particular entity at a particular time. Low-rank matrix completion aims to recover the missing entries by exploiting the assumption that the matrix, when viewed as time-dependent for each entity, can be approximated by a low-rank matrix.
 
-# Installation
+The key idea is that, even though there might be missing values, the relationships or patterns in the data across individuals and time points can be captured by a low-rank approximation. This allows for imputation of missing values based on the observed data, by learning both entity-specific and time-dependent trends in the data.  
 
-To install `lmc` from the source directory you can run 
+## Key features 
 
-```python
-python -m pip install .
+TODO
+
+## Installation
+
+Install the library with pip:
 ```
+pip install .
+```
+This ensures dependencies listed in `pyproject.toml` are handled correctly.
 
 # Usage
 
