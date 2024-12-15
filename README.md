@@ -1,13 +1,17 @@
 [Installation](#Installation) | [Usage](#Usage) | [About](#About) | [Examples](#Examples) | [License](#License) | [References](#References) 
 
-# LMC - Low-rank matrix completion for longitudinal data
+# LMC 
+Low-rank matrix completion for longitudinal data with various discrepancy terms and regularizations.
 
 ![GitHub CI](https://github.com/gsel9/dgufs/actions/workflows/ci.yml/badge.svg)
 ![GitHub CI](https://img.shields.io/badge/code%20style-black-000000.svg)
 
+---
+
 [Matrix completion](https://en.wikipedia.org/wiki/Matrix_completion) is about fill in the entries of a scarce matrix. An example of such a matrix is from the [Netflix Prize](https://en.wikipedia.org/wiki/Netflix_Prize), where the rating scores from each user for a small number of movies are organised as scarce vectors fitted into a matrix. 
 
-Less frequently studied is when the data is longitudinal and the goal is to complete the temporal relationship between measurements. This Python library that adds support for low-rank matrix completion of longitudinal data.
+A more invovled example is when the columns of the data matrix expose partially observed temporal relationship between measurements. 
+This Python library that adds support for low-rank matrix completion of such longitudinal data.
 
 # Installation
 
