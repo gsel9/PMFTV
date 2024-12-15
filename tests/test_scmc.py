@@ -2,7 +2,7 @@ import numpy as np
 from hypothesis import assume, given
 from hypothesis import strategies as st
 from hypothesis.extra.numpy import array_shapes, arrays
-from lmc.scmc import _custom_roll, _take_per_row_strided
+from lmc.factor_model.scmc import _custom_roll, _take_per_row_strided
 
 
 @given(st.data())
@@ -48,4 +48,6 @@ def test_take_per_row_strided(data):
     )
     strided_A = _take_per_row_strided(A, start_idx, n_elem)
     for i, row in enumerate(strided_A):
-        assert np.array_equal(row, A[i, start_idx[i] : start_idx[i] + n_elem])
+        start = start_idx[i]
+        stop = start + n_elem
+        assert np.array_equal(row, A[i, start:stop])

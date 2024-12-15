@@ -1,10 +1,11 @@
 """Test functionality of CMC factor model."""
+
 import unittest
 
 import numpy as np
 from hypothesis import given, strategies
 from hypothesis.extra import numpy as nps
-from lmc import CMC
+from lmc.factor_model import CMC
 
 
 class TestCMC(unittest.TestCase):

@@ -1,4 +1,5 @@
 """Test functionality of factor base model."""
+
 import unittest
 from unittest.mock import MagicMock
 
@@ -6,7 +7,7 @@ import numpy as np
 import pytest
 from hypothesis import given, strategies
 from hypothesis.extra import numpy as nps
-from lmc import MatrixCompletionBase
+from lmc.factor_model import MatrixCompletionBase
 
 
 class TestMatrixCompletionBase(unittest.TestCase):
